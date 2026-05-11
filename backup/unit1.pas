@@ -20,6 +20,8 @@ type
 
   TForm1 = class(TForm)
     btnCargarArchivos: TButton;
+    btnOriginales: TButton;
+    btnNormalizados: TButton;
     btnMedia: TButton;
     btnMediana: TButton;
     btnDesviacion: TButton;
@@ -29,10 +31,11 @@ type
     Panel1: TPanel;
     procedure BitBtn1Click(Sender: TObject);
     procedure btnCargarArchivosClick(Sender: TObject);
+    procedure btnOriginalesClick(Sender: TObject);
+    procedure btnNormalizadosClick(Sender: TObject);
     procedure btnMediaClick(Sender: TObject);
     procedure btnMedianaClick(Sender: TObject);
     procedure btnDesviacionClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure CargarGridDatos(const NombreArchivo: string);
     function DetectarDelimitador(const Linea: string): Char;
@@ -42,13 +45,17 @@ type
     procedure Label3Click(Sender: TObject);
     procedure StaticText1Click(Sender: TObject);
   private
-    matrizDatos: TMatrizString;
+    matrizDatosOriginales: TMatrizString;
+    matrizDatosNormalizados: TMatrizString;
     tiposColumnas: array of TTipoColumna;
     categoriasPorColumna: array of Integer;
     nombresColumnas: array of string;
     indiceColumnaClase: Integer;
     totalFilasDatos: Integer;
     totalColumnasDatos: Integer;
+    procedure CargarGridDesdeMatriz(const Matriz: TMatrizString);
+    procedure NormalizarDatos;
+    function NormalizadosDisponibles: Boolean;
     procedure LeerNombresColumnas(const LineaAtributos: string;
       const TotalColumnas: Integer; const Delimitador: Char);
     procedure AnalizarColumnasDatos;
@@ -78,6 +85,141 @@ procedure TForm1.FormCreate(Sender: TObject);
 begin
   totalFilasDatos := 0;
   totalColumnasDatos := 0;
+  SetLength(matrizDatosOriginales, 0);
+  SetLength(matrizDatosNormalizados, 0);
+end;
+
+function TForm1.NormalizadosDisponibles: Boolean;
+begin
+  Result := (totalFilasDatos > 0) and (totalColumnasDatos > 0) and
+    (Length(matrizDatosNormalizados) = totalFilasDatos);
+
+  if Result and (Length(matrizDatosNormalizados[0]) <> totalColumnasDatos) then
+    Result := False;
+end;
+
+procedure TForm1.CargarGridDesdeMatriz(const Matriz: TMatrizString);
+var
+  filaDatos: Integer;
+  filaGrid: Integer;
+  col: Integer;
+  filasMostrar: Integer;
+begin
+  if totalColumnasDatos <= 0 then
+    Exit;
+
+  filasMostrar := totalFilasDatos;
+  if Length(Matriz) < filasMostrar then
+    filasMostrar := Length(Matriz);
+
+  gridDatos.BeginUpdate;
+  try
+    gridDatos.FixedCols := 0;
+    gridDatos.FixedRows := 1;
+    gridDatos.RowCount := filasMostrar + 1;
+    gridDatos.ColCount := totalColumnasDatos;
+
+    for col := 0 to totalColumnasDatos - 1 do
+      gridDatos.Cells[col, 0] := nombresColumnas[col];
+
+    for filaDatos := 0 to filasMostrar - 1 do
+    begin
+      filaGrid := filaDatos + 1;
+      for col := 0 to totalColumnasDatos - 1 do
+        gridDatos.Cells[col, filaGrid] := Matriz[filaDatos][col];
+    end;
+  finally
+    gridDatos.EndUpdate;
+  end;
+end;
+
+procedure TForm1.NormalizarDatos;
+var
+  minValores: TArregloDouble;
+  maxValores: TArregloDouble;
+  tieneMinMax: TArregloBool;
+  formatos: TFormatSettings;
+  col: Integer;
+  fila: Integer;
+  valor: Double;
+  rango: Double;
+  texto: string;
+begin
+  if (totalFilasDatos <= 0) or (totalColumnasDatos <= 0) then
+    Exit;
+
+  SetLength(matrizDatosNormalizados, totalFilasDatos);
+  for fila := 0 to totalFilasDatos - 1 do
+    SetLength(matrizDatosNormalizados[fila], totalColumnasDatos);
+
+  SetLength(minValores, totalColumnasDatos);
+  SetLength(maxValores, totalColumnasDatos);
+  SetLength(tieneMinMax, totalColumnasDatos);
+
+  for col := 0 to totalColumnasDatos - 1 do
+    tieneMinMax[col] := False;
+
+  formatos := DefaultFormatSettings;
+  formatos.DecimalSeparator := '.';
+
+  for fila := 0 to totalFilasDatos - 1 do
+  begin
+    for col := 0 to totalColumnasDatos - 1 do
+    begin
+      if (col = indiceColumnaClase) or (tiposColumnas[col] <> tcContinua) then
+        Continue;
+
+      texto := Trim(matrizDatosOriginales[fila][col]);
+      if (texto = '') or (not TryStrToFloat(texto, valor, formatos)) then
+        Continue;
+
+      if not tieneMinMax[col] then
+      begin
+        minValores[col] := valor;
+        maxValores[col] := valor;
+        tieneMinMax[col] := True;
+      end
+      else
+      begin
+        if valor < minValores[col] then
+          minValores[col] := valor;
+        if valor > maxValores[col] then
+          maxValores[col] := valor;
+      end;
+    end;
+  end;
+
+  for fila := 0 to totalFilasDatos - 1 do
+  begin
+    for col := 0 to totalColumnasDatos - 1 do
+    begin
+      texto := matrizDatosOriginales[fila][col];
+
+      if (col = indiceColumnaClase) or (tiposColumnas[col] <> tcContinua) then
+      begin
+        matrizDatosNormalizados[fila][col] := texto;
+        Continue;
+      end;
+
+      if (Trim(texto) = '') or (not TryStrToFloat(Trim(texto), valor, formatos)) then
+      begin
+        matrizDatosNormalizados[fila][col] := '';
+        Continue;
+      end;
+
+      if not tieneMinMax[col] then
+        rango := 0
+      else
+        rango := maxValores[col] - minValores[col];
+
+      if rango = 0 then
+        valor := 0
+      else
+        valor := (valor - minValores[col]) / rango;
+
+      matrizDatosNormalizados[fila][col] := FormatFloat('0.######', valor, formatos);
+    end;
+  end;
 end;
 
 procedure TForm1.ActualizarResumenColumnas;
@@ -190,7 +332,7 @@ begin
     begin
       for col := 0 to totalColumnasDatos - 1 do
       begin
-        valor := Trim(matrizDatos[fila][col]);
+        valor := Trim(matrizDatosOriginales[fila][col]);
         if valor = '' then
           Continue;
 
@@ -305,14 +447,17 @@ begin
     Medias[col] := 0;
     Medianas[col] := 0;
     Desviaciones[col] := 0;
-    ColumnasCalculadas[col] := True;
+    ColumnasCalculadas[col] := (col <> indiceColumnaClase);
+
+    if not ColumnasCalculadas[col] then
+      Continue;
 
     totalValores := 0;
     SetLength(valores, 0);
 
     for fila := 0 to totalFilasDatos - 1 do
     begin
-      valorTexto := Trim(matrizDatos[fila][col]);
+      valorTexto := Trim(matrizDatosOriginales[fila][col]);
       if valorTexto = '' then
         Continue;
       if not TryStrToFloat(valorTexto, numero, formatos) then
@@ -482,7 +627,6 @@ var
   i: Integer;
   j: Integer;
   filaDatos: Integer;
-  filaGrid: Integer;
   maxColumnas: Integer;
   delimitador: Char;  //Caracter que vamos a usar para separar filas de CSV
   indice: Integer;
@@ -538,9 +682,9 @@ begin
     totalColumnasDatos := maxColumnas;
     totalFilasDatos := lineasDatos.Count;
 
-    SetLength(matrizDatos, totalFilasDatos);
+    SetLength(matrizDatosOriginales, totalFilasDatos);
     for filaDatos := 0 to totalFilasDatos - 1 do
-      SetLength(matrizDatos[filaDatos], totalColumnasDatos);
+      SetLength(matrizDatosOriginales[filaDatos], totalColumnasDatos);
 
     //Se cargan los datos en la matriz interna (sin encabezado)
     for i := 0 to lineasDatos.Count - 1 do
@@ -551,36 +695,19 @@ begin
       for j := 0 to totalColumnasDatos - 1 do
       begin
         if (j < valoresFila.Count) and (valoresFila.Count > 0) then
-          matrizDatos[filaDatos][j] := valoresFila[j]
+          matrizDatosOriginales[filaDatos][j] := valoresFila[j]
         else
-          matrizDatos[filaDatos][j] := '';
+          matrizDatosOriginales[filaDatos][j] := '';
       end;
     end;
+
+    SetLength(matrizDatosNormalizados, 0);
 
     //Primera fila = atributos (nombres), se ignora para el analisis
     LeerNombresColumnas(lineasArchivo[0], maxColumnas, delimitador);
     AnalizarColumnasDatos;
 
-    gridDatos.BeginUpdate;
-    try
-      gridDatos.FixedCols := 0;
-      gridDatos.FixedRows := 1;
-      gridDatos.RowCount := totalFilasDatos + 1;
-      gridDatos.ColCount := totalColumnasDatos;
-
-      for j := 0 to maxColumnas - 1 do
-        gridDatos.Cells[j, 0] := nombresColumnas[j];
-
-      //Se agregan los valores al GRID ignorando la primera fila (atributos)
-      for filaDatos := 0 to totalFilasDatos - 1 do
-      begin
-        filaGrid := filaDatos + 1;
-        for j := 0 to totalColumnasDatos - 1 do
-          gridDatos.Cells[j, filaGrid] := matrizDatos[filaDatos][j];
-      end;
-    finally
-      gridDatos.EndUpdate;
-    end;
+    CargarGridDesdeMatriz(matrizDatosOriginales);
   finally
     valoresFila.Free;
     lineasDatos.Free;
@@ -598,6 +725,34 @@ begin
     CargarGridDatos(dialogoAbrirArchivo.FileName);
 end;
 
+procedure TForm1.btnOriginalesClick(Sender: TObject);
+begin
+  if (totalFilasDatos <= 0) or (totalColumnasDatos <= 0) then
+  begin
+    ShowMessage('No hay datos cargados.');
+    Exit;
+  end;
+
+  CargarGridDesdeMatriz(matrizDatosOriginales);
+end;
+
+procedure TForm1.btnNormalizadosClick(Sender: TObject);
+begin
+  if (totalFilasDatos <= 0) or (totalColumnasDatos <= 0) then
+  begin
+    ShowMessage('No hay datos cargados.');
+    Exit;
+  end;
+
+  if not NormalizadosDisponibles then
+    NormalizarDatos;
+
+  if NormalizadosDisponibles then
+    CargarGridDesdeMatriz(matrizDatosNormalizados)
+  else
+    ShowMessage('No fue posible normalizar los datos.');
+end;
+
 procedure TForm1.btnMediaClick(Sender: TObject);
 begin
   EjecutarEstadistica(teMedia);
@@ -613,10 +768,6 @@ begin
   EjecutarEstadistica(teDesviacion);
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
-
-end;
 
 procedure TForm1.BitBtn1Click(Sender: TObject);
 begin
