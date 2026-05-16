@@ -42,6 +42,34 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit1"/>
       </Unit>
+      <Unit>
+        <Filename Value="matrices.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Matrices"/>
+      </Unit>
+      <Unit>
+        <Filename Value="estadisticas.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Estadisticas"/>
+      </Unit>
+      <Unit>
+        <Filename Value="normalizacion.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Normalizacion"/>
+      </Unit>
+      <Unit>
+        <Filename Value="naivebayes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form2"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="NaiveBayes"/>
+      </Unit>
+      <Unit>
+        <Filename Value="graficas.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Graficas"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

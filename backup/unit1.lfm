@@ -1,36 +1,45 @@
 object Form1: TForm1
   Left = 352
-  Height = 635
+  Height = 957
   Top = 32
-  Width = 1131
+  Width = 1245
   Caption = 'Form1'
-  ClientHeight = 635
-  ClientWidth = 1131
+  ClientHeight = 957
+  ClientWidth = 1245
   DesignTimePPI = 120
   Font.Height = -15
   LCLVersion = '4.4.0.0'
   OnCreate = FormCreate
   object btnCargarArchivos: TButton
-    Left = 816
+    Left = 248
     Height = 31
-    Top = 544
+    Top = 472
     Width = 126
     Caption = 'Cargar Archivo'
     TabOrder = 0
     OnClick = btnCargarArchivosClick
   end
+  object btnCargarPrueba: TButton
+    Left = 384
+    Height = 31
+    Top = 472
+    Width = 126
+    Caption = 'Cargar prueba'
+    TabOrder = 1
+    OnClick = btnCargarPruebaClick
+  end
   object gridDatos: TStringGrid
     Left = 576
     Height = 496
     Top = 40
-    Width = 536
+    Width = 648
     ColCount = 15
     DefaultColWidth = 38
     DefaultRowHeight = 25
     FixedCols = 0
     FixedRows = 0
     RowCount = 20
-    TabOrder = 1
+    TabOrder = 2
     ColWidths = (
       39
       41
@@ -72,60 +81,187 @@ object Form1: TForm1
     )
   end
   object Edit1: TEdit
-    Left = 8
+    Left = -8
     Height = 28
-    Top = 8
+    Top = 0
     Width = 100
-    TabOrder = 2
+    TabOrder = 3
     Text = 'Edit1'
   end
   object btnMedia: TButton
-    Left = 88
+    Left = 272
     Height = 31
-    Top = 96
+    Top = 509
     Width = 94
     Caption = 'btnMedia'
-    TabOrder = 3
+    TabOrder = 4
     OnClick = btnMediaClick
   end
   object btnOriginales: TButton
-    Left = 88
+    Left = 144
     Height = 31
-    Top = 240
+    Top = 512
     Width = 94
     Caption = 'Originales'
-    TabOrder = 4
+    TabOrder = 5
     OnClick = btnOriginalesClick
   end
   object btnMediana: TButton
-    Left = 88
+    Left = 16
     Height = 31
-    Top = 144
+    Top = 509
     Width = 94
     Caption = 'btnMediana'
-    TabOrder = 5
+    TabOrder = 6
     OnClick = btnMedianaClick
   end
   object btnDesviacion: TButton
-    Left = 88
+    Left = 24
     Height = 31
-    Top = 192
+    Top = 472
     Width = 94
     Caption = 'Desviacion estandar'
-    TabOrder = 6
+    TabOrder = 7
     OnClick = btnDesviacionClick
   end
   object btnNormalizados: TButton
-    Left = 88
+    Left = 144
     Height = 31
-    Top = 280
+    Top = 472
     Width = 94
     Caption = 'Normalizados'
-    TabOrder = 7
+    TabOrder = 8
     OnClick = btnNormalizadosClick
+  end
+  object btnExportarNormalizados: TButton
+    Left = 160
+    Height = 31
+    Top = 549
+    Width = 150
+    Caption = 'Exportar normalizados'
+    TabOrder = 9
+    OnClick = btnExportarNormalizadosClick
+  end
+  object cmbTipoGrafica: TComboBox
+    Left = 16
+    Height = 28
+    Top = 432
+    Width = 140
+    ItemHeight = 20
+    TabOrder = 10
+    OnChange = cmbTipoGraficaChange
+  end
+  object btnGraficar: TButton
+    Left = 168
+    Height = 31
+    Top = 432
+    Width = 94
+    Caption = 'Graficar'
+    TabOrder = 11
+    OnClick = btnGraficarClick
+  end
+  object paintBoxClases: TPaintBox
+    Left = 16
+    Height = 372
+    Top = 40
+    Width = 540
+    OnClick = paintBoxClasesClick
+    OnPaint = paintBoxClasesPaint
+  end
+  object btnEvaluarPrueba: TButton
+    Left = 384
+    Height = 31
+    Top = 512
+    Width = 126
+    Caption = 'Evaluar prueba'
+    TabOrder = 12
+    OnClick = btnEvaluarPruebaClick
+  end
+  object cBoxColumnaA: TComboBox
+    Left = 280
+    Height = 28
+    Top = 432
+    Width = 125
+    ItemHeight = 20
+    TabOrder = 13
+    Text = 'Eje X'
+    Visible = False
+    OnChange = cBoxColumnaAChange
+  end
+  object cBoxColumnaB: TComboBox
+    Left = 416
+    Height = 28
+    Top = 432
+    Width = 125
+    ItemHeight = 20
+    TabOrder = 14
+    Text = 'Eje Y'
+    Visible = False
+    OnChange = cBoxColumnaBChange
+  end
+  object gridResultados: TStringGrid
+    Left = 576
+    Height = 256
+    Top = 568
+    Width = 646
+    ColCount = 1
+    DefaultColWidth = 90
+    DefaultRowHeight = 25
+    FixedCols = 0
+    RowCount = 1
+    TabOrder = 15
+  end
+  object cmbMetodoNormalizacion: TComboBox
+    Left = 24
+    Height = 28
+    Top = 552
+    Width = 125
+    ItemHeight = 20
+    TabOrder = 16
+    Text = 'cmbMetodoNormalizacion'
+  end
+  object spinKFolds: TSpinEdit
+    Left = 432
+    Height = 28
+    Top = 549
+    Width = 95
+    MaxValue = 2
+    MinValue = 20
+    TabOrder = 17
+    Value = 5
+  end
+  object btnKFolds: TButton
+    Left = 320
+    Height = 31
+    Top = 549
+    Width = 94
+    Caption = 'btnKFolds'
+    OnClick = btnKFoldsClick
+    TabOrder = 18
+  end
+  object gridKFolds: TStringGrid
+    Left = 24
+    Height = 216
+    Top = 608
+    Width = 517
+    TabOrder = 19
+  end
+  object memoEvaluacion: TMemo
+    Left = 40
+    Height = 80
+    Top = 840
+    Width = 494
+    Lines.Strings = (
+      'memoEvaluacion'
+    )
+    TabOrder = 20
   end
   object dialogoAbrirArchivo: TOpenDialog
     Left = 128
+    Top = 8
+  end
+  object saveDialogExportar: TSaveDialog
+    Left = 208
     Top = 8
   end
 end
