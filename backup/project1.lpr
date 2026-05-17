@@ -10,7 +10,8 @@ uses
   athreads,
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, Unit1, Matrices, Estadisticas, Normalizacion, NaiveBayes
+  Forms, Unit1, Matrices, Estadisticas, Normalizacion, NaiveBayes, Graficas,
+  DatosSinteticos
   { you can add units after this };
 
 {$R *.res}
@@ -23,7 +24,7 @@ begin
   {$POP}
   Application.Initialize;
   Application.CreateForm(TForm1, Form1);
-  Application.CreateForm(TForm2, Form2);
+  { Application.CreateForm(TForm2, Form2); -- removed: no TForm2 in project }
   Application.Run;
 end.
 

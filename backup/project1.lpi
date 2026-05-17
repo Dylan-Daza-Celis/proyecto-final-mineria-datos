@@ -70,6 +70,16 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="Graficas"/>
       </Unit>
+      <Unit>
+        <Filename Value="datossinteticos.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="datosSinteticos"/>
+      </Unit>
+      <Unit>
+        <Filename Value="agnes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Agnes"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

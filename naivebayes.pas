@@ -31,6 +31,14 @@ type
     EtiquetasConfusion: TStringList;
   end;
 
+  TResultadoClasificacion = record
+    ClaseReal: string;
+    ClasePredicha: string;
+    Probabilidades: TArregloDouble;
+  end;
+
+  TArregloResultadosClasificacion = array of TResultadoClasificacion;
+
   TIndiceFold = array of Integer;
   TFolds = array of TIndiceFold;
   TResultadoFold = record
@@ -87,7 +95,14 @@ procedure EjecutarKFold(const MatrizDatos: TMatrizString;
   const TotalFilas, TotalColumnas, IndiceColumnaClase: Integer;
   const NumFolds: Integer; out ResultadoKFold: TResultadoKFold);
 
+function ObtenerResultadoClasificacion(Index: Integer): TResultadoClasificacion;
+function ObtenerCantidadResultadosClasificacion: Integer;
+procedure LimpiarResultadosClasificacion;
+
 implementation
+
+var
+  ResultadosClasificacionP: TArregloResultadosClasificacion;
 
 procedure InicializarModeloNaiveBayes(var Modelo: TNaiveBayesModel);
 begin
@@ -403,6 +418,7 @@ var
   clasePredicha: string;
   formatos: TFormatSettings;
   valorNumero: Double;
+  idxResultado: Integer;
 begin
   Resultado.TotalRegistros := 0;
   Resultado.Aciertos := 0;
@@ -414,6 +430,8 @@ begin
   SetLength(Resultado.ClasesReales, 0);
   SetLength(Resultado.ClasesPredichas, 0);
   SetLength(Resultado.MatrizConfusion, 0);
+  
+  LimpiarResultadosClasificacion;
 
   formatos := DefaultFormatSettings;
   formatos.DecimalSeparator := '.';
@@ -450,6 +468,12 @@ begin
     SetLength(Resultado.ClasesPredichas, Resultado.TotalRegistros);
     Resultado.ClasesReales[Resultado.TotalRegistros - 1] := claseReal;
     Resultado.ClasesPredichas[Resultado.TotalRegistros - 1] := clasePredicha;
+    
+    idxResultado := Length(ResultadosClasificacionP);
+    SetLength(ResultadosClasificacionP, idxResultado + 1);
+    ResultadosClasificacionP[idxResultado].ClaseReal := claseReal;
+    ResultadosClasificacionP[idxResultado].ClasePredicha := clasePredicha;
+    ResultadosClasificacionP[idxResultado].Probabilidades := Copy(probabilidades);
 
     if SameText(claseReal, clasePredicha) then
       Inc(Resultado.Aciertos)
@@ -855,6 +879,26 @@ begin
   SetLength(Resultado.ClasesPredichas, 0);
   SetLength(Resultado.MatrizConfusion, 0);
   Resultado.EtiquetasConfusion := TStringList.Create;
+end;
+
+function ObtenerResultadoClasificacion(Index: Integer): TResultadoClasificacion;
+begin
+  Result.ClaseReal := '';
+  Result.ClasePredicha := '';
+  SetLength(Result.Probabilidades, 0);
+  
+  if (Index >= 0) and (Index < Length(ResultadosClasificacionP)) then
+    Result := ResultadosClasificacionP[Index];
+end;
+
+function ObtenerCantidadResultadosClasificacion: Integer;
+begin
+  Result := Length(ResultadosClasificacionP);
+end;
+
+procedure LimpiarResultadosClasificacion;
+begin
+  SetLength(ResultadosClasificacionP, 0);
 end;
 
 end.

@@ -10,7 +10,8 @@ uses
   athreads,
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, Unit1, Matrices, Estadisticas, Normalizacion, NaiveBayes, Graficas
+  Forms, Unit1, Matrices, Estadisticas, Normalizacion, NaiveBayes, Graficas,
+  DatosSinteticos, Agnes
   { you can add units after this };
 
 {$R *.res}

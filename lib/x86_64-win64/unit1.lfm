@@ -11,18 +11,18 @@ object Form1: TForm1
   LCLVersion = '4.4.0.0'
   OnCreate = FormCreate
   object btnCargarArchivos: TButton
-    Left = 248
+    Left = 952
     Height = 31
-    Top = 472
+    Top = 840
     Width = 126
     Caption = 'Cargar Archivo'
     TabOrder = 0
     OnClick = btnCargarArchivosClick
   end
   object btnCargarPrueba: TButton
-    Left = 384
+    Left = 1088
     Height = 31
-    Top = 472
+    Top = 840
     Width = 126
     Caption = 'Cargar prueba'
     TabOrder = 1
@@ -80,66 +80,58 @@ object Form1: TForm1
       25
     )
   end
-  object Edit1: TEdit
-    Left = -8
-    Height = 28
-    Top = 0
-    Width = 100
-    TabOrder = 3
-    Text = 'Edit1'
-  end
   object btnMedia: TButton
-    Left = 272
+    Left = 976
     Height = 31
-    Top = 509
+    Top = 877
     Width = 94
-    Caption = 'btnMedia'
-    TabOrder = 4
+    Caption = 'Media'
+    TabOrder = 3
     OnClick = btnMediaClick
   end
   object btnOriginales: TButton
-    Left = 144
+    Left = 848
     Height = 31
-    Top = 512
+    Top = 880
     Width = 94
     Caption = 'Originales'
-    TabOrder = 5
+    TabOrder = 10
     OnClick = btnOriginalesClick
   end
   object btnMediana: TButton
-    Left = 16
+    Left = 720
     Height = 31
-    Top = 509
+    Top = 877
     Width = 94
-    Caption = 'btnMediana'
-    TabOrder = 6
+    Caption = 'Mediana'
+    TabOrder = 4
     OnClick = btnMedianaClick
   end
   object btnDesviacion: TButton
-    Left = 24
+    Left = 728
     Height = 31
-    Top = 472
+    Top = 840
     Width = 94
-    Caption = 'Desviacion estandar'
-    TabOrder = 7
+    Caption = 'Desviación'
+    TabOrder = 5
     OnClick = btnDesviacionClick
   end
   object btnNormalizados: TButton
-    Left = 144
+    Left = 848
     Height = 31
-    Top = 472
+    Top = 840
     Width = 94
     Caption = 'Normalizados'
-    TabOrder = 8
+    TabOrder = 6
     OnClick = btnNormalizadosClick
   end
   object btnExportarNormalizados: TButton
     Left = 160
     Height = 31
-    Top = 549
+    Top = 472
     Width = 150
     Caption = 'Exportar normalizados'
-    TabOrder = 9
+    TabOrder = 7
     OnClick = btnExportarNormalizadosClick
   end
   object cmbTipoGrafica: TComboBox
@@ -148,7 +140,7 @@ object Form1: TForm1
     Top = 432
     Width = 140
     ItemHeight = 20
-    TabOrder = 10
+    TabOrder = 8
     OnChange = cmbTipoGraficaChange
   end
   object btnGraficar: TButton
@@ -157,7 +149,7 @@ object Form1: TForm1
     Top = 432
     Width = 94
     Caption = 'Graficar'
-    TabOrder = 11
+    TabOrder = 9
     OnClick = btnGraficarClick
   end
   object paintBoxClases: TPaintBox
@@ -169,12 +161,12 @@ object Form1: TForm1
     OnPaint = paintBoxClasesPaint
   end
   object btnEvaluarPrueba: TButton
-    Left = 384
+    Left = 1088
     Height = 31
-    Top = 512
+    Top = 880
     Width = 126
-    Caption = 'Evaluar prueba'
-    TabOrder = 12
+    Caption = 'Evaluar Prueba'
+    TabOrder = 11
     OnClick = btnEvaluarPruebaClick
   end
   object cBoxColumnaA: TComboBox
@@ -183,7 +175,7 @@ object Form1: TForm1
     Top = 432
     Width = 125
     ItemHeight = 20
-    TabOrder = 13
+    TabOrder = 12
     Text = 'Eje X'
     Visible = False
     OnChange = cBoxColumnaAChange
@@ -194,7 +186,7 @@ object Form1: TForm1
     Top = 432
     Width = 125
     ItemHeight = 20
-    TabOrder = 14
+    TabOrder = 13
     Text = 'Eje Y'
     Visible = False
     OnChange = cBoxColumnaBChange
@@ -203,65 +195,160 @@ object Form1: TForm1
     Left = 576
     Height = 256
     Top = 568
-    Width = 646
+    Width = 328
     ColCount = 1
     DefaultColWidth = 90
     DefaultRowHeight = 25
-    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine]
     RowCount = 1
-    TabOrder = 15
+    TabOrder = 14
+    OnSelectCell = gridResultadosSelectCell
   end
   object cmbMetodoNormalizacion: TComboBox
     Left = 24
     Height = 28
-    Top = 552
+    Top = 475
     Width = 125
     ItemHeight = 20
-    TabOrder = 16
-    Text = 'cmbMetodoNormalizacion'
+    TabOrder = 15
+    Text = 'Método Normalización'
   end
   object spinKFolds: TSpinEdit
-    Left = 432
+    Left = 654
     Height = 28
-    Top = 549
-    Width = 95
-    MaxValue = 2
-    MinValue = 20
-    TabOrder = 17
+    Top = 840
+    Width = 60
+    MaxValue = 20
+    MinValue = 2
+    TabOrder = 16
     Value = 5
   end
-  object btnKFolds: TButton
-    Left = 320
-    Height = 31
-    Top = 549
-    Width = 94
-    Caption = 'btnKFolds'
-    TabOrder = 18
+  object lblKFolds: TLabel
+    Left = 632
+    Height = 20
+    Top = 843
+    Width = 12
+    Caption = 'K:'
   end
-  object gridKFolds: TStringGrid
-    Left = 24
-    Height = 216
-    Top = 608
-    Width = 517
-    TabOrder = 19
+  object btnKFolds: TButton
+    Left = 608
+    Height = 31
+    Top = 880
+    Width = 105
+    Caption = 'Ejecutar K-Fold'
+    TabOrder = 17
+    OnClick = btnKFoldsClick
   end
   object memoEvaluacion: TMemo
-    Left = 40
-    Height = 80
-    Top = 840
-    Width = 494
+    Left = 920
+    Height = 256
+    Top = 568
+    Width = 304
     Lines.Strings = (
       'memoEvaluacion'
     )
-    TabOrder = 20
+    TabOrder = 18
   end
-  object ScrollBar1: TScrollBar
-    Left = 392
-    Height = 26
-    Top = 864
-    Width = 151
-    PageSize = 0
+  object imgDatosSinteticos: TImage
+    Left = 16
+    Height = 360
+    Top = 592
+    Width = 485
+    OnMouseDown = imgDatosSinteticosMouseDown
+    OnResize = imgDatosSinteticosResize
+  end
+  object cmbClaseActual: TComboBox
+    Left = 320
+    Height = 28
+    Top = 475
+    Width = 125
+    ItemHeight = 20
+    TabOrder = 19
+    Text = 'cmbClaseActual'
+  end
+  object spinNumClases: TSpinEdit
+    Left = 488
+    Height = 28
+    Top = 475
+    Width = 63
+    MaxValue = 10
+    MinValue = 2
+    TabOrder = 20
+    Value = 2
+  end
+  object lblNumClases: TLabel
+    Left = 448
+    Height = 20
+    Top = 456
+    Width = 121
+    Caption = 'Número de clases:'
+  end
+  object lblClaseActual: TLabel
+    Left = 336
+    Height = 20
+    Top = 456
+    Width = 82
+    Caption = 'Clase actual:'
+  end
+  object btnCrearClases: TButton
+    Left = 40
+    Height = 31
+    Top = 520
+    Width = 94
+    Caption = 'Crear Clases'
     TabOrder = 21
+    OnClick = btnCrearClasesClick
+  end
+  object btnLimpiarCanvas: TButton
+    Left = 152
+    Height = 31
+    Top = 520
+    Width = 94
+    Caption = 'Limpiar'
+    TabOrder = 22
+    OnClick = btnLimpiarCanvasClick
+  end
+  object btnGuardarSinteticos: TButton
+    Left = 264
+    Height = 31
+    Top = 520
+    Width = 96
+    Caption = 'Guardar CSV'
+    TabOrder = 23
+    OnClick = btnGuardarSinteticosClick
+  end
+  object lblPuntos: TLabel
+    Left = 232
+    Height = 20
+    Top = 560
+    Width = 59
+    Caption = 'Puntos: 0'
+  end
+  object spinNumClusters: TSpinEdit
+    Left = 381
+    Height = 28
+    Top = 544
+    Width = 60
+    MaxValue = 20
+    MinValue = 2
+    TabOrder = 24
+    Value = 2
+  end
+  object lblNumClusters: TLabel
+    Left = 368
+    Height = 20
+    Top = 516
+    Width = 131
+    Caption = 'Número de clusters:'
+  end
+  object btnAGNES: TButton
+    Left = 451
+    Height = 31
+    Top = 544
+    Width = 105
+    Caption = 'Ejecutar AGNES'
+    TabOrder = 25
+    OnClick = btnAGNESClick
   end
   object dialogoAbrirArchivo: TOpenDialog
     Left = 128
