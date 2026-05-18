@@ -5,7 +5,7 @@ unit Estadisticas;
 interface
 
 uses
-  Classes, SysUtils, Matrices;
+  Classes, SysUtils, Grids, Matrices;
 
 procedure OrdenarValores(var Valores: TArregloDouble);
 procedure CalcularMediaDesviacionMuestral(const Valores: TArregloDouble;
@@ -16,6 +16,13 @@ procedure CalcularEstadisticasNumericas(const MatrizDatosOriginales: TMatrizStri
   const TotalColumnasDatos, TotalFilasDatos, IndiceColumnaClase: Integer;
   out Medias, Medianas, Desviaciones: TArregloDouble;
   out ColumnasCalculadas: TArregloBool);
+procedure AgregarFilaEstadistica(const Grid: TStringGrid;
+  const TotalColumnasDatos: Integer; const Valores: TArregloDouble;
+  const ColumnasCalculadas: TArregloBool; const FilaDestino: Integer);
+procedure EjecutarEstadistica(const Grid: TStringGrid;
+  const MatrizDatosOriginales: TMatrizString;
+  const TotalColumnasDatos, TotalFilasDatos, IndiceColumnaClase: Integer;
+  const Tipo: TTipoEstadistica);
 
 implementation
 
@@ -174,6 +181,81 @@ begin
     Medianas[col] := mediana;
     Desviaciones[col] := desviacion;
     ColumnasCalculadas[col] := True;
+  end;
+end;
+
+procedure AgregarFilaEstadistica(const Grid: TStringGrid;
+  const TotalColumnasDatos: Integer; const Valores: TArregloDouble;
+  const ColumnasCalculadas: TArregloBool; const FilaDestino: Integer);
+var
+  col: Integer;
+  formatos: TFormatSettings;
+begin
+  if (Grid = nil) or (TotalColumnasDatos = 0) or (FilaDestino < 0) then
+    Exit;
+
+  formatos := DefaultFormatSettings;
+  formatos.DecimalSeparator := '.';
+
+  Grid.BeginUpdate;
+  try
+    if Grid.RowCount <= FilaDestino then
+      Grid.RowCount := FilaDestino + 1;
+
+    for col := 0 to TotalColumnasDatos - 1 do
+    begin
+      if (col < Length(ColumnasCalculadas)) and ColumnasCalculadas[col] then
+        Grid.Cells[col, FilaDestino] := FormatFloat('0.######', Valores[col], formatos)
+      else
+        Grid.Cells[col, FilaDestino] := '';
+    end;
+  finally
+    Grid.EndUpdate;
+  end;
+end;
+
+procedure EjecutarEstadistica(const Grid: TStringGrid;
+  const MatrizDatosOriginales: TMatrizString;
+  const TotalColumnasDatos, TotalFilasDatos, IndiceColumnaClase: Integer;
+  const Tipo: TTipoEstadistica);
+var
+  medias: TArregloDouble;
+  medianas: TArregloDouble;
+  desviaciones: TArregloDouble;
+  columnasCalculadas: TArregloBool;
+  filaBase: Integer;
+  filaDestino: Integer;
+begin
+  if (Grid = nil) or (TotalFilasDatos <= 0) or (TotalColumnasDatos <= 0) then
+    Exit;
+
+  CalcularEstadisticasNumericas(MatrizDatosOriginales, TotalColumnasDatos,
+    TotalFilasDatos, IndiceColumnaClase, medias, medianas, desviaciones,
+    columnasCalculadas);
+
+  filaBase := TotalFilasDatos + 1;
+  if Grid.RowCount < filaBase + 3 then
+    Grid.RowCount := filaBase + 3;
+
+  case Tipo of
+    teMedia:
+      begin
+        filaDestino := filaBase;
+        AgregarFilaEstadistica(Grid, TotalColumnasDatos, medias,
+          columnasCalculadas, filaDestino);
+      end;
+    teMediana:
+      begin
+        filaDestino := filaBase + 1;
+        AgregarFilaEstadistica(Grid, TotalColumnasDatos, medianas,
+          columnasCalculadas, filaDestino);
+      end;
+    teDesviacion:
+      begin
+        filaDestino := filaBase + 2;
+        AgregarFilaEstadistica(Grid, TotalColumnasDatos, desviaciones,
+          columnasCalculadas, filaDestino);
+      end;
   end;
 end;
 

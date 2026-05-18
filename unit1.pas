@@ -1,12 +1,12 @@
-unit Unit1;
+﻿unit Unit1;
 
 {$mode objfpc}{$H+}
 
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, Menus, Grids,
-  Buttons, ExtCtrls, Spin, Math, Matrices, Estadisticas, Normalizacion,
+  Classes, SysUtils, Forms, Controls, Dialogs, StdCtrls, Menus, Grids,
+  Buttons, ExtCtrls, Spin, Matrices, Estadisticas, Normalizacion,
   NaiveBayes, Graficas, DatosSinteticos, Agrupamiento;
 
 type
@@ -14,16 +14,15 @@ type
   { TForm1 }
 
   TTipoEstadistica = Matrices.TTipoEstadistica;
-  TTipoGrafica = Matrices.TTipoGrafica;
-  TTipoNormalizacion = Matrices.TTipoNormalizacion;
   TMatrizString = Matrices.TMatrizString;
   TArregloDouble = Matrices.TArregloDouble;
-  TArregloBool = Matrices.TArregloBool;
+  TTipoGrafica = Matrices.TTipoGrafica;
   TArregloEntero = Matrices.TArregloEntero;
+  TTipoNormalizacion = Matrices.TTipoNormalizacion;
   TArregloEntero2D = Matrices.TArregloEntero2D;
-  TArregloDoble2D = Matrices.TArregloDoble2D;
-  TArregloString = Matrices.TArregloString;
   TNombresColumnas = Matrices.TNombresColumnas;
+  TArregloDoble2D = Matrices.TArregloDoble2D;
+  
 
   TTipoVistaResultados =
   (
@@ -38,10 +37,6 @@ type
     btnOriginales: TButton;
     btnNormalizados: TButton;
     btnExportarNormalizados: TButton;
-    btnMedia: TButton;
-    btnMediana: TButton;
-    btnDesviacion: TButton;
-    btnGraficar: TButton;
     btnCargarPrueba: TButton;
     btnEvaluarPrueba: TButton;
     btnKFolds: TButton;
@@ -51,17 +46,31 @@ type
     cBoxColumnaA: TComboBox;
     cBoxColumnaB: TComboBox;
     cmbMetodoNormalizacion: TComboBox;
-    cmbClaseActual: TComboBox;
+    cBoxClaseActual: TComboBox;
     dialogoAbrirArchivo: TOpenDialog;
     imgDatosSinteticos: TImage;
+    Label1: TLabel;
+    Label10: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    Label7: TLabel;
+    Label8: TLabel;
+    Label9: TLabel;
     memoEvaluacion: TMemo;
     saveDialogExportar: TSaveDialog;
-    cmbTipoGrafica: TComboBox;
+    cBoxTipoGrafica: TComboBox;
     gridDatos: TStringGrid;
     gridResultados: TStringGrid;
     lblKFolds: TLabel;
+    btnMedia: TButton;
+    btnMediana: TButton;
     lblPuntos: TLabel;
     lblNumClases: TLabel;
+    btnDesviacion: TButton;
+    btnGraficar: TButton;
     lblClaseActual: TLabel;
     paintBoxClases: TPaintBox;
     spinNumClases: TSpinEdit;
@@ -86,7 +95,7 @@ type
     procedure btnDesviacionClick(Sender: TObject);
     procedure cBoxColumnaAChange(Sender: TObject);
     procedure cBoxColumnaBChange(Sender: TObject);
-    procedure cmbTipoGraficaChange(Sender: TObject);
+    procedure cBoxTipoGraficaChange(Sender: TObject);
     procedure cmbMetodoNormalizacionChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure imgDatosSinteticosMouseDown(Sender: TObject; Button: TMouseButton;
@@ -96,12 +105,22 @@ type
     procedure gridResultadosSelectCell(Sender: TObject; Col, Row: Integer;
       var CanSelect: Boolean);
     procedure CargarGridDatos(const NombreArchivo: string);
-    function DetectarDelimitador(const Linea: string): Char;
     procedure paintBoxClasesClick(Sender: TObject);
     procedure paintBoxClasesPaint(Sender: TObject);
     procedure CargarComboBoxColumnas;
     procedure ValidarColumnasSeleccionadas(Sender: TObject);
     procedure ActualizarControlesGrafica;
+    procedure ExportarMatrizNormalizada;
+    procedure EjecutarEstadisticaSeleccionada(const Tipo: TTipoEstadistica);
+    procedure EntrenarNaiveBayes;
+    procedure LimpiarGridResultados;
+    procedure MostrarMatrizConfusionEnGrid(const ClasesUnicas: TStringList;
+      const MatrizConfusion: TArregloEntero2D);
+    procedure MostrarResultadosKFoldEnGrid(const ResultadoKFold: NaiveBayes.TResultadoKFold);
+    procedure MostrarResultadosClasificacionEnGrid;
+    procedure EvaluarConjuntoPrueba;
+    procedure InicializarGridResultados;
+    procedure ActualizarContadorPuntosSinteticos;
   private
     matrizDatosOriginales: TMatrizString;
     matrizDatosNormalizados: TMatrizString;
@@ -118,9 +137,6 @@ type
     delimitadorArchivo: Char;
     delimitadorArchivoPrueba: Char;
     tipoGraficaActual: TTipoGrafica;
-    etiquetasClases: TStringList;
-    conteosClases: TArregloEntero;
-    maxConteoClases: Integer;
     dispersionX: TArregloDouble;
     dispersionY: TArregloDouble;
     dispersionMinX: Double;
@@ -143,60 +159,13 @@ type
     desviacionesNormalizacion: TArregloDouble;
     factoresDecimalScaling: TArregloEntero;
     tipoNormalizacionActual: TTipoNormalizacion;
-    boxLabels: TStringList;
-    boxMin: TArregloDouble;
-    boxQ1: TArregloDouble;
-    boxMed: TArregloDouble;
-    boxQ3: TArregloDouble;
-    boxMax: TArregloDouble;
     vistaActualResultados: TTipoVistaResultados;
     resultadoAGNES: Agrupamiento.TResultadoAGNES;
-    columnasNumericasAGNES: TArregloEntero;
-    totalColumnasNumericasAGNES: Integer;
-    procedure CargarGridDesdeMatriz(const Matriz: TMatrizString);
-    procedure CargarDatosDesdeCSV(const NombreArchivo: string;
-      out Matriz: TMatrizString; out Nombres: TNombresColumnas;
-      out TotalFilas, TotalColumnas, IndiceClase: Integer; out Delimitador: Char);
     procedure CargarDatosPrueba(const NombreArchivo: string);
-    procedure ContarClases(out Etiquetas: TStringList; out Conteos: TArregloEntero);
-    procedure ObtenerClasesUnicas(out Clases: TStringList; out Conteos: TArregloEntero);
-    procedure PrepararGraficaClases;
-    procedure PrepararGraficaDispersion;
-    procedure PrepararGraficaBoxPlot;
-    procedure DibujarGraficaClases;
-    procedure DibujarGraficaDispersion;
-    procedure DibujarGraficaBoxPlot;
-    procedure LimpiarGrafica(const Mensaje: string);
     procedure AplicarNormalizacionActual;
     { Normalization moved to Normalizacion.pas - keep state only in this form }
     function NormalizadosDisponibles: Boolean;
-    procedure ExportarMatrizCSV(const Matriz: TMatrizString);
-    procedure LeerNombresColumnas(const LineaAtributos: string;
-      const TotalColumnas: Integer; const Delimitador: Char);
-    procedure OrdenarValores(var Valores: TArregloDouble);
-    procedure CalcularMediaDesviacionMuestral(const Valores: TArregloDouble;
-      out Media, Desviacion: Double);
-    procedure CalcularMediaDesviacionPoblacional(const Valores: TArregloDouble;
-      out Media, Desviacion: Double);
-    procedure CalcularEstadisticasNumericas(out Medias, Medianas,
-      Desviaciones: TArregloDouble; out ColumnasCalculadas: TArregloBool);
-    procedure AgregarFilaEstadistica(const Valores: TArregloDouble;
-      const ColumnasCalculadas: TArregloBool; const FilaDestino: Integer);
-    procedure EjecutarEstadistica(const Tipo: TTipoEstadistica);
-    procedure EntrenarNaiveBayes;
-    function ObtenerIndiceClase(const Clase: string;
-      const Clases: TStringList): Integer;
-    procedure ConstruirMatrizConfusion(const ClasesReales,
-      ClasesPredichas: TArregloString; out ClasesUnicas: TStringList;
-      out MatrizConfusion: TArregloEntero2D);
-    procedure LimpiarGridResultados;
-    procedure MostrarMatrizConfusionEnGrid(const ClasesUnicas: TStringList;
-      const MatrizConfusion: TArregloEntero2D);
-    procedure MostrarResultadosKFoldEnGrid(const ResultadoKFold: NaiveBayes.TResultadoKFold);
-    procedure MostrarResultadosClasificacionEnGrid;
-    procedure EvaluarConjuntoPrueba;
-    procedure InicializarGridResultados;
-    procedure ActualizarContadorPuntosSinteticos;
+    
 
 
   public
@@ -205,6 +174,8 @@ type
 
 var
   Form1: TForm1;
+  i: Integer;
+  j: Integer;
 
 implementation
 
@@ -217,22 +188,23 @@ begin
   totalFilasDatos := 0;
   totalColumnasDatos := 0;
   totalFilasPrueba := 0;
-  totalColumnasPrueba := 0;
-  indiceColumnaClase := -1;
   indiceColumnaClasePrueba := -1;
   SetLength(matrizDatosOriginales, 0);
   SetLength(matrizDatosNormalizados, 0);
   SetLength(matrizDatosPrueba, 0);
+  cBoxTipoGrafica.Items.Clear;
+  cBoxTipoGrafica.Items.Add('Ninguna');
+  cBoxTipoGrafica.Items.Add('Barras');
   SetLength(matrizDatosPruebaNormalizados, 0);
   SetLength(minValoresNormalizacion, 0);
   SetLength(maxValoresNormalizacion, 0);
   delimitadorArchivo := ',';
   delimitadorArchivoPrueba := ',';
   tipoGraficaActual := tgNinguna;
-  etiquetasClases := nil;
-  boxLabels := nil;
   dispersionLabelX := '';
   dispersionLabelY := '';
+  totalColumnasPrueba := 0;
+  indiceColumnaClase := -1;
   nbClases := nil;
   nbNumAtributos := 0;
   nbEntrenado := False;
@@ -240,17 +212,14 @@ begin
   NaiveBayes.InicializarModeloNaiveBayes(nbModelo);
   SetLength(nbPriors, 0);
   SetLength(nbMedias, 0);
-  SetLength(nbDesv, 0);
-  SetLength(nbConteos, 0);
-  cmbTipoGrafica.Items.Clear;
-  cmbTipoGrafica.Items.Add('Ninguna');
-  cmbTipoGrafica.Items.Add('Barras');
-  cmbTipoGrafica.Items.Add('Dispersion');
-  cmbTipoGrafica.Items.Add('BoxPlot');
-  cmbTipoGrafica.ItemIndex := 0;
+  cBoxTipoGrafica.Items.Add('Dispersion');
+  cBoxTipoGrafica.Items.Add('BoxPlot');
+  cBoxTipoGrafica.ItemIndex := 0;
   cmbMetodoNormalizacion.Items.Clear;
   cmbMetodoNormalizacion.Items.Add('Min-Max');
   cmbMetodoNormalizacion.Items.Add('Z-Score');
+  cBoxColumnaA.Visible := False;
+  cBoxColumnaB.Visible := False;
   cmbMetodoNormalizacion.Items.Add('Decimal Scaling');
   cmbMetodoNormalizacion.ItemIndex := 0;
   tipoNormalizacionActual := tnMinMax;
@@ -258,14 +227,13 @@ begin
   cBoxColumnaB.Items.Clear;
   cBoxColumnaA.Enabled := False;
   cBoxColumnaB.Enabled := False;
-  cBoxColumnaA.Visible := False;
-  cBoxColumnaB.Visible := False;
+  SetLength(nbDesv, 0);
+  SetLength(nbConteos, 0);
   InicializarGridResultados;
   ActualizarControlesGrafica;
-  { Inicializar datos sintéticos }
-  cmbClaseActual.Items.Clear;
-  cmbClaseActual.Text := '';
-  cmbClaseActual.ItemIndex := -1;
+  cBoxClaseActual.Items.Clear;
+  cBoxClaseActual.Text := '';
+  cBoxClaseActual.ItemIndex := -1;
   memoEvaluacion.Clear;
   imgDatosSinteticos.Stretch := False;
   imgDatosSinteticos.Center := False;
@@ -294,42 +262,45 @@ var
   numFolds: Integer;
   resultadoKFold: NaiveBayes.TResultadoKFold;
   mensajeValidacion: string;
-  i: Integer;
   resumen: string;
 begin
+  //Primero validamos que se haya cargado el conjunto P
   if totalFilasDatos <= 0 then
   begin
     ShowMessage('No hay datos de entrenamiento cargados.');
     Exit;
   end;
-
+  //En caso de que aun no este entrenado el modelo, lo entrenamos
   if not nbEntrenado then
     EntrenarNaiveBayes;
 
+  //Asignamos y validamos el numero de Folds
   numFolds := spinKFolds.Value;
   if numFolds < 2 then
   begin
-    ShowMessage('El número de folds debe ser mayor o igual a 2.');
+    ShowMessage('El numero de folds debe ser mayor o igual a 2.');
     Exit;
   end;
 
+  //Validamos que los Folds sean menores al numero de registros
   if numFolds > totalFilasDatos then
   begin
-    ShowMessage('El número de folds no puede ser mayor que el número total de registros.');
+    ShowMessage('El numero de folds no puede ser mayor que el numero total de registros.');
     Exit;
   end;
 
-  { Validar que cada clase tenga suficientes registros }
+  //Validamos que cada clase tenga suficientes registros
   NaiveBayes.ValidarClasesParaKFold(matrizDatosOriginales, totalFilasDatos,
     indiceColumnaClase, numFolds, mensajeValidacion);
 
+  //Validamos que la funcion validarClases... haya funcionado correctamente
   if mensajeValidacion <> '' then
   begin
     ShowMessage('No se puede ejecutar K-Fold: ' + LineEnding + mensajeValidacion);
     Exit;
   end;
 
-  { Ejecutar K-Fold Cross Validation }
+  //Ejecutamos K-Fold Cross Validation
   try
     NaiveBayes.EjecutarKFold(matrizDatosOriginales, totalFilasDatos, totalColumnasDatos,
       indiceColumnaClase, numFolds, resultadoKFold);
@@ -341,37 +312,39 @@ begin
     end;
   end;
 
+  //Validamos que se hayan procesado correctamente los Folds
   if resultadoKFold.NumFolds = 0 then
   begin
     ShowMessage('Error al ejecutar K-Fold Cross Validation.');
     Exit;
   end;
 
+  //Mostramos al usuario los resultados
   MostrarResultadosKFoldEnGrid(resultadoKFold);
   vistaActualResultados := vrKFold;
   Graficas.LimpiarGrafica(paintBoxClases, '');
 
-  { Limpiar memo }
+  //Validamos la existencia del memo
   if memoEvaluacion <> nil then
   begin
     memoEvaluacion.Lines.Clear;
 
-    { Mostrar resumen en memo con formato mejorado }
-    resumen := '========== K-FOLD CROSS VALIDATION ==========' + LineEnding + LineEnding +
-      'Configuración:' + LineEnding +
-      '  Número de folds: ' + IntToStr(resultadoKFold.NumFolds) + LineEnding +
+    // Mostramos el resumen en memo con formato
+    resumen := ' VALIDACION DE K-FOLD CROSS ' + LineEnding + LineEnding +
+      'Configuracion:' + LineEnding +
+      '  Numero de folds: ' + IntToStr(resultadoKFold.NumFolds) + LineEnding +
       '  Total registros: ' + IntToStr(totalFilasDatos) + LineEnding + LineEnding +
 
       'Resultados Globales:' + LineEnding +
       '  Accuracy Promedio: ' + FormatFloat('0.00', resultadoKFold.AccuracyPromedio) + '%' + LineEnding +
-      '  Desviación Estándar: ' + FormatFloat('0.0000', resultadoKFold.DesviacionEstandar) + LineEnding +
+      '  Desviacion Estandar: ' + FormatFloat('0.0000', resultadoKFold.DesviacionEstandar) + LineEnding +
       '  Error Promedio: ' + FormatFloat('0.00', resultadoKFold.TasaErrorPromedio) + '%' + LineEnding +
       '  Total Correctos: ' + IntToStr(resultadoKFold.TotalCorrectos) + LineEnding +
       '  Total Incorrectos: ' + IntToStr(resultadoKFold.TotalIncorrectos) + LineEnding + LineEnding +
 
-      '--- RESULTADOS POR FOLD ---' + LineEnding;
+      'RESULTADOS POR FOLD: ' + LineEnding;
 
-    { Detalles por fold }
+    //Detalles por fold
     for i := 0 to numFolds - 1 do
     begin
       resumen := resumen + LineEnding +
@@ -385,6 +358,7 @@ begin
     memoEvaluacion.Lines.Text := resumen;
   end;
 
+  //Liberamos espacios de memoria
   if Assigned(resultadoKFold.EtiquetasConfusionGlobal) then
     resultadoKFold.EtiquetasConfusionGlobal.Free;
 
@@ -398,31 +372,28 @@ var
   colX: Integer;
   colY: Integer;
   fila: Integer;
-  i: Integer;
-  resumen: string;
   conteoClusters: array of Integer;
+  clustersDispersion: TArregloEntero;
   formatos: TFormatSettings;
   valorX: Double;
   valorY: Double;
   puntos: Integer;
+  filaGrid: Integer;
 begin
+  //Validamos que se haya cargado un archivo
   if totalFilasDatos <= 0 then
   begin
     ShowMessage('No hay datos cargados. Cargue un conjunto de datos primero.');
     Exit;
   end;
 
+  //Asigamos el numero de  clusters seleccionados
   numClusters := spinNumClusters.Value;
 
-  if numClusters < 2 then
+  //validamos que sea 1 cluster minimo
+  if numClusters < 1 then
   begin
-    ShowMessage('El número de clusters debe ser mayor o igual a 2.');
-    Exit;
-  end;
-
-  if numClusters > (totalFilasDatos - 1) then
-  begin
-    ShowMessage('El número de clusters no puede ser mayor que el número de registros.');
+    ShowMessage('El numero de clusters debe ser mayor o igual a 1.');
     Exit;
   end;
 
@@ -441,27 +412,20 @@ begin
     Exit;
   end;
 
-  if (colX >= indiceColumnaClase) or (colY >= indiceColumnaClase) then
+  if (colX >= gridDatos.ColCount - 1) or (colY >= gridDatos.ColCount - 1) then
   begin
-    ShowMessage('Las columnas seleccionadas no son válidas.');
+    ShowMessage('Las columnas seleccionadas no son validas.');
     Exit;
   end;
 
-  Agrupamiento.DetectarColumnasNumericas(matrizDatosOriginales, totalColumnasDatos,
-    indiceColumnaClase, columnasNumericasAGNES, totalColumnasNumericasAGNES);
-
-  if totalColumnasNumericasAGNES < 1 then
-  begin
-    ShowMessage('No se encontraron columnas numéricas en los datos.');
-    Exit;
-  end;
-
-  resultadoAGNES := Agrupamiento.EjecutarAGNES(matrizDatosOriginales, numClusters,
-    columnasNumericasAGNES);
+  resultadoAGNES := Agrupamiento.EjecutarAGNES(gridDatos, numClusters);
 
   if resultadoAGNES.NumClusters = 0 then
   begin
-    ShowMessage('Error ejecutando AGNES.');
+    if resultadoAGNES.MensajeError <> '' then
+      ShowMessage(resultadoAGNES.MensajeError)
+    else
+      ShowMessage('Error ejecutando AGNES.');
     Exit;
   end;
 
@@ -478,6 +442,7 @@ begin
 
   SetLength(dispersionX, 0);
   SetLength(dispersionY, 0);
+  SetLength(clustersDispersion, 0);
 
   dispersionLabelX := nombresColumnas[colX];
   dispersionLabelY := nombresColumnas[colY];
@@ -487,20 +452,27 @@ begin
 
   puntos := 0;
 
-  for fila := 0 to totalFilasDatos - 1 do
+  for fila := 0 to High(resultadoAGNES.FilasOriginales) do
   begin
-    if not TryStrToFloat(Trim(matrizDatosOriginales[fila][colX]), valorX, formatos) then
+    filaGrid := resultadoAGNES.FilasOriginales[fila];
+
+    if (filaGrid < 0) or (filaGrid >= gridDatos.RowCount) then
       Continue;
 
-    if not TryStrToFloat(Trim(matrizDatosOriginales[fila][colY]), valorY, formatos) then
+    if not TryStrToFloat(Trim(gridDatos.Cells[colX, filaGrid]), valorX, formatos) then
+      Continue;
+
+    if not TryStrToFloat(Trim(gridDatos.Cells[colY, filaGrid]), valorY, formatos) then
       Continue;
 
     Inc(puntos);
     SetLength(dispersionX, puntos);
     SetLength(dispersionY, puntos);
+    SetLength(clustersDispersion, puntos);
 
     dispersionX[puntos - 1] := valorX;
     dispersionY[puntos - 1] := valorY;
+    clustersDispersion[puntos - 1] := resultadoAGNES.ClusterPorRegistro[fila];
 
     if puntos = 1 then
     begin
@@ -524,26 +496,27 @@ begin
 
   if puntos = 0 then
   begin
-    ShowMessage('No hay datos numéricos válidos para visualizar.');
+    ShowMessage('No hay datos numericos validos para visualizar.');
     Exit;
   end;
 
-  Graficas.DibujarGraficaDispersionClusters(paintBoxClases, dispersionX, dispersionY,
+  Graficas.MostrarGraficaClusters(paintBoxClases, dispersionX, dispersionY,
     dispersionMinX, dispersionMaxX, dispersionMinY, dispersionMaxY,
-    dispersionLabelX, dispersionLabelY, resultadoAGNES.ClusterPorRegistro);
+    dispersionLabelX, dispersionLabelY, clustersDispersion);
 
   if memoEvaluacion <> nil then
   begin
     memoEvaluacion.Lines.Clear;
     memoEvaluacion.Lines.Add('========== AGNES - AGGLOMERATIVE HIERARCHICAL CLUSTERING ==========');
     memoEvaluacion.Lines.Add('');
-    memoEvaluacion.Lines.Add('Configuración:');
-    memoEvaluacion.Lines.Add('  Número de clusters solicitados: ' + IntToStr(numClusters));
-    memoEvaluacion.Lines.Add('  Número de clusters generados: ' + IntToStr(resultadoAGNES.NumClusters));
-    memoEvaluacion.Lines.Add('  Total registros: ' + IntToStr(totalFilasDatos));
-    memoEvaluacion.Lines.Add('  Método: Single Linkage');
+    memoEvaluacion.Lines.Add('Configuracion:');
+    memoEvaluacion.Lines.Add('  Numero de clusters solicitados: ' + IntToStr(numClusters));
+    memoEvaluacion.Lines.Add('  Numero de clusters generados: ' + IntToStr(resultadoAGNES.NumClusters));
+    memoEvaluacion.Lines.Add('  Total registros limpios: ' + IntToStr(Length(resultadoAGNES.FilasOriginales)));
+    memoEvaluacion.Lines.Add('  Atributos numericos usados: ' + IntToStr(Length(resultadoAGNES.ColumnasNumericas)));
+    memoEvaluacion.Lines.Add('  Metodo: Single Linkage');
     memoEvaluacion.Lines.Add('');
-    memoEvaluacion.Lines.Add('Distribución de clusters:');
+    memoEvaluacion.Lines.Add('Distribucion de clusters:');
 
     for i := 0 to resultadoAGNES.NumClusters - 1 do
     begin
@@ -552,12 +525,12 @@ begin
     end;
 
     memoEvaluacion.Lines.Add('');
-    memoEvaluacion.Lines.Add('Visualización: scatter plot coloreado por cluster');
+    memoEvaluacion.Lines.Add('Visualizacion: scatter plot coloreado por cluster');
   end;
 
   SetLength(conteoClusters, 0);
+  SetLength(clustersDispersion, 0);
 end;
-
 procedure TForm1.CargarComboBoxColumnas;
 var
   col: Integer;
@@ -600,7 +573,7 @@ end;
 
 procedure TForm1.ValidarColumnasSeleccionadas(Sender: TObject);
 begin
-  if cmbTipoGrafica.ItemIndex <> 2 then
+  if cBoxTipoGrafica.ItemIndex <> 2 then
     Exit;
 
   if (not cBoxColumnaA.Enabled) or (not cBoxColumnaB.Enabled) then
@@ -629,7 +602,7 @@ begin
   ValidarColumnasSeleccionadas(Sender);
 end;
 
-procedure TForm1.cmbTipoGraficaChange(Sender: TObject);
+procedure TForm1.cBoxTipoGraficaChange(Sender: TObject);
 begin
   ActualizarControlesGrafica;
 end;
@@ -659,7 +632,7 @@ begin
     factoresDecimalScaling, matrizDatosPrueba, totalFilasPrueba, totalColumnasPrueba,
     matrizDatosNormalizados, matrizDatosPruebaNormalizados);
 
-  CargarGridDesdeMatriz(matrizDatosNormalizados);
+  Matrices.CargarGridDesdeMatriz(gridDatos, matrizDatosNormalizados, nombresColumnas, totalFilasDatos, totalColumnasDatos);
 end;
 
 procedure TForm1.cmbMetodoNormalizacionChange(Sender: TObject);
@@ -677,7 +650,7 @@ begin
   cBoxColumnaA.Enabled := False;
   cBoxColumnaB.Enabled := False;
 
-  case cmbTipoGrafica.ItemIndex of
+  case cBoxTipoGrafica.ItemIndex of
     1:
       begin
         cBoxColumnaA.Visible := False;
@@ -723,394 +696,21 @@ begin
   end;
 end;
 
-procedure TForm1.LimpiarGrafica(const Mensaje: string);
+procedure TForm1.ExportarMatrizNormalizada;
 begin
-  Graficas.LimpiarGrafica(paintBoxClases, Mensaje);
-end;
-
-procedure TForm1.ContarClases(out Etiquetas: TStringList; out Conteos: TArregloEntero);
-begin
-  Graficas.ContarClases(matrizDatosOriginales, totalFilasDatos,
-    indiceColumnaClase, Etiquetas, Conteos);
-end;
-
-procedure TForm1.ObtenerClasesUnicas(out Clases: TStringList;
-  out Conteos: TArregloEntero);
-begin
-  ContarClases(Clases, Conteos);
-end;
-
-procedure TForm1.PrepararGraficaClases;
-begin
-  Graficas.PrepararGraficaClases(matrizDatosOriginales, totalFilasDatos,
-    indiceColumnaClase, etiquetasClases, conteosClases, maxConteoClases);
-end;
-
-procedure TForm1.PrepararGraficaDispersion;
-var
-  colX: Integer;
-  colY: Integer;
-  fila: Integer;
-  valorX: Double;
-  valorY: Double;
-  formatos: TFormatSettings;
-  puntos: Integer;
-begin
-  colX := cBoxColumnaA.ItemIndex;
-  colY := cBoxColumnaB.ItemIndex;
-
-  if (colX < 0) or (colY < 0) then
-  begin
-    ShowMessage('Seleccione columnas validas.');
-    Exit;
-  end;
-
-  if colX = colY then
-  begin
-    ShowMessage('Seleccione columnas diferentes para la dispersion.');
-    Exit;
-  end;
-
-  if (colX >= indiceColumnaClase) or
-     (colY >= indiceColumnaClase) then
-  begin
-    ShowMessage('Las columnas seleccionadas no son validas.');
-    Exit;
-  end;
-
-  SetLength(dispersionX, 0);
-  SetLength(dispersionY, 0);
-
-  dispersionLabelX := nombresColumnas[colX];
-  dispersionLabelY := nombresColumnas[colY];
-
-  formatos := DefaultFormatSettings;
-  formatos.DecimalSeparator := '.';
-
-  puntos := 0;
-
-  for fila := 0 to totalFilasDatos - 1 do
-  begin
-    if not TryStrToFloat(
-      Trim(matrizDatosOriginales[fila][colX]),
-      valorX,
-      formatos
-    ) then
-      Continue;
-
-    if not TryStrToFloat(
-      Trim(matrizDatosOriginales[fila][colY]),
-      valorY,
-      formatos
-    ) then
-      Continue;
-
-    Inc(puntos);
-
-    SetLength(dispersionX, puntos);
-    SetLength(dispersionY, puntos);
-
-    dispersionX[puntos - 1] := valorX;
-    dispersionY[puntos - 1] := valorY;
-
-    if puntos = 1 then
-    begin
-      dispersionMinX := valorX;
-      dispersionMaxX := valorX;
-      dispersionMinY := valorY;
-      dispersionMaxY := valorY;
-    end
-    else
-    begin
-      if valorX < dispersionMinX then
-        dispersionMinX := valorX;
-
-      if valorX > dispersionMaxX then
-        dispersionMaxX := valorX;
-
-      if valorY < dispersionMinY then
-        dispersionMinY := valorY;
-
-      if valorY > dispersionMaxY then
-        dispersionMaxY := valorY;
-    end;
-  end;
-
-  if puntos = 0 then
-    ShowMessage('No hay datos numericos para dispersion.');
-end;
-
-procedure TForm1.PrepararGraficaBoxPlot;
-var
-  col: Integer;
-  fila: Integer;
-  numero: Double;
-  clase: string;
-  idxClase: Integer;
-  i: Integer;
-  valoresClase: array of TArregloDouble;
-  valores: TArregloDouble;
-  clasesTemp: TStringList;
-  formatos: TFormatSettings;
-  function Percentil(const Datos: TArregloDouble; const P: Double): Double;
-  var
-    idx: Double;
-    i: Integer;
-    frac: Double;
-  begin
-    if Length(Datos) = 0 then
-      Exit(0);
-    if Length(Datos) = 1 then
-      Exit(Datos[0]);
-
-    idx := (Length(Datos) - 1) * P;
-    i := Trunc(idx);
-    frac := idx - i;
-    if i >= Length(Datos) - 1 then
-      Result := Datos[High(Datos)]
-    else
-      Result := Datos[i] + frac * (Datos[i + 1] - Datos[i]);
-  end;
-begin
-  if Assigned(boxLabels) then
-  begin
-    boxLabels.Free;
-    boxLabels := nil;
-  end;
-
-  boxLabels := TStringList.Create;
-  SetLength(boxMin, 0);
-  SetLength(boxQ1, 0);
-  SetLength(boxMed, 0);
-  SetLength(boxQ3, 0);
-  SetLength(boxMax, 0);
-
-  formatos := DefaultFormatSettings;
-  formatos.DecimalSeparator := '.';
-
-  col := cBoxColumnaA.ItemIndex;
-
-  if (col < 0) or (col >= indiceColumnaClase) then
-  begin
-    ShowMessage('Seleccione una columna valida.');
-    Exit;
-  end;
-
-  clasesTemp := TStringList.Create;
-  try
-    SetLength(valoresClase, 0);
-
-    for fila := 0 to totalFilasDatos - 1 do
-    begin
-      if not TryStrToFloat(Trim(matrizDatosOriginales[fila][col]), numero, formatos) then
-        Continue;
-
-      clase := Trim(matrizDatosOriginales[fila][indiceColumnaClase]);
-      if clase = '' then
-        clase := 'SinClase';
-
-      idxClase := clasesTemp.IndexOf(clase);
-      if idxClase < 0 then
-      begin
-        idxClase := clasesTemp.Add(clase);
-        SetLength(valoresClase, clasesTemp.Count);
-        SetLength(valoresClase[idxClase], 0);
-      end;
-
-      SetLength(valoresClase[idxClase], Length(valoresClase[idxClase]) + 1);
-      valoresClase[idxClase][High(valoresClase[idxClase])] := numero;
-    end;
-
-    for i := 0 to clasesTemp.Count - 1 do
-    begin
-      valores := valoresClase[i];
-      if Length(valores) = 0 then
-        Continue;
-
-      OrdenarValores(valores);
-
-      boxLabels.Add(clasesTemp[i]);
-      SetLength(boxMin, Length(boxMin) + 1);
-      SetLength(boxQ1, Length(boxQ1) + 1);
-      SetLength(boxMed, Length(boxMed) + 1);
-      SetLength(boxQ3, Length(boxQ3) + 1);
-      SetLength(boxMax, Length(boxMax) + 1);
-
-      boxMin[High(boxMin)] := valores[0];
-      boxMax[High(boxMax)] := valores[High(valores)];
-      boxQ1[High(boxQ1)] := Percentil(valores, 0.25);
-      boxMed[High(boxMed)] := Percentil(valores, 0.50);
-      boxQ3[High(boxQ3)] := Percentil(valores, 0.75);
-    end;
-  finally
-    clasesTemp.Free;
-  end;
-
-  if boxLabels.Count = 0 then
-    ShowMessage('No hay datos numericos para boxplot.');
-end;
-
-procedure TForm1.DibujarGraficaClases;
-begin
-  Graficas.DibujarGraficaClases(paintBoxClases, etiquetasClases,
-    conteosClases, maxConteoClases);
-end;
-
-procedure TForm1.DibujarGraficaDispersion;
-begin
-  Graficas.DibujarGraficaDispersion(paintBoxClases, dispersionX, dispersionY,
-    dispersionMinX, dispersionMaxX, dispersionMinY, dispersionMaxY,
-    dispersionLabelX, dispersionLabelY);
-end;
-
-procedure TForm1.DibujarGraficaBoxPlot;
-begin
-  Graficas.DibujarGraficaBoxPlot(paintBoxClases, boxLabels,
-    boxMin, boxQ1, boxMed, boxQ3, boxMax);
-end;
-
-procedure TForm1.paintBoxClasesPaint(Sender: TObject);
-begin
-  case tipoGraficaActual of
-    tgBarras: DibujarGraficaClases;
-    tgDispersion: DibujarGraficaDispersion;
-    tgBoxPlot: DibujarGraficaBoxPlot;
-  else
-    LimpiarGrafica('Seleccione grafica y presione Graficar');
-  end;
-end;
-
-procedure TForm1.ExportarMatrizCSV(const Matriz: TMatrizString);
-begin
-  if (totalFilasDatos <= 0) or (totalColumnasDatos <= 0) then
-  begin
-    ShowMessage('No hay datos para exportar.');
-    Exit;
-  end;
-
-  if Length(Matriz) = 0 then
-  begin
-    ShowMessage('No hay datos para exportar.');
-    Exit;
-  end;
-
   saveDialogExportar.Title := 'Guardar CSV';
   saveDialogExportar.Filter := 'CSV (*.csv)|*.csv|Todos los archivos|*.*';
   saveDialogExportar.DefaultExt := 'csv';
 
   if not saveDialogExportar.Execute then
     Exit;
-  Matrices.ExportarMatrizCSV(Matriz, nombresColumnas, totalFilasDatos,
-    totalColumnasDatos, delimitadorArchivo, saveDialogExportar.FileName);
+
+  Matrices.ExportarMatrizCSV(matrizDatosNormalizados, nombresColumnas,
+    totalFilasDatos, totalColumnasDatos, delimitadorArchivo,
+    saveDialogExportar.FileName);
 end;
 
-procedure TForm1.CargarGridDesdeMatriz(const Matriz: TMatrizString);
-var
-  filaDatos: Integer;
-  filaGrid: Integer;
-  col: Integer;
-  filasMostrar: Integer;
-begin
-  if totalColumnasDatos <= 0 then
-    Exit;
-
-  filasMostrar := totalFilasDatos;
-  if Length(Matriz) < filasMostrar then
-    filasMostrar := Length(Matriz);
-
-  gridDatos.BeginUpdate;
-  try
-    gridDatos.FixedCols := 0;
-    gridDatos.FixedRows := 1;
-    gridDatos.RowCount := filasMostrar + 1;
-    gridDatos.ColCount := totalColumnasDatos;
-
-    for col := 0 to totalColumnasDatos - 1 do
-      gridDatos.Cells[col, 0] := nombresColumnas[col];
-
-    for filaDatos := 0 to filasMostrar - 1 do
-    begin
-      filaGrid := filaDatos + 1;
-      for col := 0 to totalColumnasDatos - 1 do
-        gridDatos.Cells[col, filaGrid] := Matriz[filaDatos][col];
-    end;
-  finally
-    gridDatos.EndUpdate;
-  end;
-end;
-
-// Normalization logic moved to Normalizacion.pas - call Normalizacion.NormalizarDatos where needed.
-
-procedure TForm1.LeerNombresColumnas(const LineaAtributos: string;
-  const TotalColumnas: Integer; const Delimitador: Char);
-begin
-  // Conservado por compatibilidad con llamadas existentes.
-  // Los nombres se cargan desde Matrices.CargarDatosDesdeCSV.
-end;
-
-
-procedure TForm1.OrdenarValores(var Valores: TArregloDouble);
-begin
-  Estadisticas.OrdenarValores(Valores);
-end;
-
-procedure TForm1.CalcularMediaDesviacionMuestral(const Valores: TArregloDouble;
-  out Media, Desviacion: Double);
-begin
-  Estadisticas.CalcularMediaDesviacionMuestral(Valores, Media, Desviacion);
-end;
-
-procedure TForm1.CalcularMediaDesviacionPoblacional(const Valores: TArregloDouble;
-  out Media, Desviacion: Double);
-begin
-  Estadisticas.CalcularMediaDesviacionPoblacional(Valores, Media, Desviacion);
-end;
-
-procedure TForm1.CalcularEstadisticasNumericas(out Medias, Medianas,
-  Desviaciones: TArregloDouble; out ColumnasCalculadas: TArregloBool);
-begin
-  Estadisticas.CalcularEstadisticasNumericas(matrizDatosOriginales,
-    totalColumnasDatos, totalFilasDatos, indiceColumnaClase,
-    Medias, Medianas, Desviaciones, ColumnasCalculadas);
-end;
-
-procedure TForm1.AgregarFilaEstadistica(const Valores: TArregloDouble;
-  const ColumnasCalculadas: TArregloBool; const FilaDestino: Integer);
-var
-  col: Integer;
-  formatos: TFormatSettings;
-begin
-  if (totalColumnasDatos = 0) or (FilaDestino < 0) then
-    Exit;
-
-  formatos := DefaultFormatSettings;
-  formatos.DecimalSeparator := '.';
-
-  gridDatos.BeginUpdate;
-  try
-    if gridDatos.RowCount <= FilaDestino then
-      gridDatos.RowCount := FilaDestino + 1;
-
-    for col := 0 to totalColumnasDatos - 1 do
-    begin
-      if (col < Length(ColumnasCalculadas)) and ColumnasCalculadas[col] then
-        gridDatos.Cells[col, FilaDestino] := FormatFloat('0.######', Valores[col], formatos)
-      else
-        gridDatos.Cells[col, FilaDestino] := '';
-    end;
-  finally
-    gridDatos.EndUpdate;
-  end;
-end;
-
-procedure TForm1.EjecutarEstadistica(const Tipo: TTipoEstadistica);
-var
-  medias: TArregloDouble;
-  medianas: TArregloDouble;
-  desviaciones: TArregloDouble;
-  columnasCalculadas: TArregloBool;
-  filaBase: Integer;
-  filaDestino: Integer;
+procedure TForm1.EjecutarEstadisticaSeleccionada(const Tipo: TTipoEstadistica);
 begin
   if (totalFilasDatos <= 0) or (totalColumnasDatos <= 0) then
   begin
@@ -1118,56 +718,8 @@ begin
     Exit;
   end;
 
-  CalcularEstadisticasNumericas(medias, medianas, desviaciones, columnasCalculadas);
-
-  filaBase := totalFilasDatos + 1;
-  if gridDatos.RowCount < filaBase + 3 then
-    gridDatos.RowCount := filaBase + 3;
-
-  case Tipo of
-    teMedia:
-      begin
-        filaDestino := filaBase;
-        AgregarFilaEstadistica(medias, columnasCalculadas, filaDestino);
-      end;
-    teMediana:
-      begin
-        filaDestino := filaBase + 1;
-        AgregarFilaEstadistica(medianas, columnasCalculadas, filaDestino);
-      end;
-    teDesviacion:
-      begin
-        filaDestino := filaBase + 2;
-        AgregarFilaEstadistica(desviaciones, columnasCalculadas, filaDestino);
-      end;
-  end;
-end;
-
-procedure TForm1.EntrenarNaiveBayes;
-begin
-  NaiveBayes.EntrenarNaiveBayes(matrizDatosOriginales, totalFilasDatos,
-    totalColumnasDatos, indiceColumnaClase, nbModelo);
-
-  nbEntrenado := nbModelo.Entrenado;
-  nbNumAtributos := nbModelo.NumAtributos;
-  nbPriors := Copy(nbModelo.Priors, 0, Length(nbModelo.Priors));
-  nbConteos := Copy(nbModelo.Conteos, 0, Length(nbModelo.Conteos));
-  nbMedias := Copy(nbModelo.Medias, 0, Length(nbModelo.Medias));
-  nbDesv := Copy(nbModelo.Desv, 0, Length(nbModelo.Desv));
-
-  if Assigned(nbClases) then
-    nbClases.Free;
-  nbClases := TStringList.Create;
-  if Assigned(nbModelo.Clases) then
-    nbClases.Assign(nbModelo.Clases);
-end;
-
-procedure TForm1.CargarDatosDesdeCSV(const NombreArchivo: string;
-  out Matriz: TMatrizString; out Nombres: TNombresColumnas;
-  out TotalFilas, TotalColumnas, IndiceClase: Integer; out Delimitador: Char);
-begin
-  Matrices.CargarDatosDesdeCSV(NombreArchivo, Matriz, Nombres,
-    TotalFilas, TotalColumnas, IndiceClase, Delimitador);
+  Estadisticas.EjecutarEstadistica(gridDatos, matrizDatosOriginales,
+    totalColumnasDatos, totalFilasDatos, indiceColumnaClase, Tipo);
 end;
 
 procedure TForm1.LimpiarGridResultados;
@@ -1190,6 +742,35 @@ begin
   gridResultados.Cells[0, 0] := 'Resultados';
 end;
 
+procedure TForm1.paintBoxClasesPaint(Sender: TObject);
+var
+  mensajeError: string;
+begin
+  case tipoGraficaActual of
+    tgBarras:
+      Graficas.MostrarGraficaClases(paintBoxClases, matrizDatosOriginales,
+        totalFilasDatos, indiceColumnaClase);
+    tgDispersion:
+      begin
+        Graficas.MostrarGraficaDispersion(paintBoxClases, matrizDatosOriginales,
+          nombresColumnas, totalFilasDatos, indiceColumnaClase,
+          cBoxColumnaA.ItemIndex, cBoxColumnaB.ItemIndex, mensajeError);
+        if (Sender = nil) and (mensajeError <> '') then
+          ShowMessage(mensajeError);
+      end;
+    tgBoxPlot:
+      begin
+        Graficas.MostrarGraficaBoxPlot(paintBoxClases, matrizDatosOriginales,
+          totalFilasDatos, indiceColumnaClase, cBoxColumnaA.ItemIndex,
+          mensajeError);
+        if (Sender = nil) and (mensajeError <> '') then
+          ShowMessage(mensajeError);
+      end;
+  else
+    Graficas.LimpiarGrafica(paintBoxClases, 'Seleccione grafica y presione Graficar');
+  end;
+end;
+
 procedure TForm1.CargarDatosPrueba(const NombreArchivo: string);
 begin
   if (totalFilasDatos <= 0) or (totalColumnasDatos <= 0) then
@@ -1198,9 +779,7 @@ begin
     Exit;
   end;
 
-  CargarDatosDesdeCSV(NombreArchivo, matrizDatosPrueba, nombresColumnasPrueba,
-    totalFilasPrueba, totalColumnasPrueba, indiceColumnaClasePrueba,
-    delimitadorArchivoPrueba);
+  Matrices.CargarDatosDesdeCSV(NombreArchivo, matrizDatosPrueba, nombresColumnasPrueba, totalFilasPrueba, totalColumnasPrueba, indiceColumnaClasePrueba, delimitadorArchivoPrueba);
 
   if totalColumnasPrueba <= 0 then
     Exit;
@@ -1222,28 +801,28 @@ begin
   Graficas.LimpiarGrafica(paintBoxClases, '');
 end;
 
-function TForm1.ObtenerIndiceClase(const Clase: string;
-  const Clases: TStringList): Integer;
+procedure TForm1.EntrenarNaiveBayes;
 begin
-  Result := -1;
-  if not Assigned(Clases) then
-    Exit;
-  Result := Clases.IndexOf(Clase);
-end;
+  NaiveBayes.EntrenarNaiveBayes(matrizDatosOriginales, totalFilasDatos,
+    totalColumnasDatos, indiceColumnaClase, nbModelo);
 
-procedure TForm1.ConstruirMatrizConfusion(const ClasesReales,
-  ClasesPredichas: TArregloString; out ClasesUnicas: TStringList;
-  out MatrizConfusion: TArregloEntero2D);
-begin
-  NaiveBayes.ConstruirMatrizConfusion(ClasesReales, ClasesPredichas,
-    ClasesUnicas, MatrizConfusion);
+  nbEntrenado := nbModelo.Entrenado;
+  nbNumAtributos := nbModelo.NumAtributos;
+  nbPriors := Copy(nbModelo.Priors, 0, Length(nbModelo.Priors));
+  nbConteos := Copy(nbModelo.Conteos, 0, Length(nbModelo.Conteos));
+  nbMedias := Copy(nbModelo.Medias, 0, Length(nbModelo.Medias));
+  nbDesv := Copy(nbModelo.Desv, 0, Length(nbModelo.Desv));
+
+  if Assigned(nbClases) then
+    nbClases.Free;
+  nbClases := TStringList.Create;
+  if Assigned(nbModelo.Clases) then
+    nbClases.Assign(nbModelo.Clases);
 end;
 
 procedure TForm1.MostrarMatrizConfusionEnGrid(const ClasesUnicas: TStringList;
   const MatrizConfusion: TArregloEntero2D);
-var
-  i: Integer;
-  j: Integer;
+
 begin
   if not Assigned(ClasesUnicas) then
     Exit;
@@ -1270,8 +849,6 @@ begin
 end;
 
 procedure TForm1.MostrarResultadosKFoldEnGrid(const ResultadoKFold: NaiveBayes.TResultadoKFold);
-var
-  i: Integer;
 begin
   LimpiarGridResultados;
   gridResultados.FixedCols := 1;
@@ -1306,7 +883,6 @@ end;
 
 procedure TForm1.MostrarResultadosClasificacionEnGrid;
 var
-  i: Integer;
   resultado: NaiveBayes.TResultadoClasificacion;
 begin
   LimpiarGridResultados;
@@ -1400,12 +976,6 @@ begin
   ShowMessage(resumen);
 end;
 
-//Metodo para determinar si el delimitador va a ser , o ;
-function TForm1.DetectarDelimitador(const Linea: string): Char;
-begin
-  Result := Matrices.DetectarDelimitador(Linea);
-end;
-
 procedure TForm1.paintBoxClasesClick(Sender: TObject);
 begin
 
@@ -1421,7 +991,7 @@ begin
   if Button <> mbLeft then
     Exit;
 
-  if (cmbClaseActual.ItemIndex < 0) or (cmbClaseActual.ItemIndex >= cmbClaseActual.Items.Count) then
+  if (cBoxClaseActual.ItemIndex < 0) or (cBoxClaseActual.ItemIndex >= cBoxClaseActual.Items.Count) then
   begin
     ShowMessage('Primero cree y seleccione una clase.');
     Exit;
@@ -1433,7 +1003,7 @@ begin
     Exit;
   end;
 
-  claseActual := cmbClaseActual.ItemIndex;
+  claseActual := cBoxClaseActual.ItemIndex;
   ConvertirCoordenadasPantallaACartesianas(imgDatosSinteticos, X, Y,
     XCartesiano, YCartesiano);
   AgregarPuntoSintetico(XCartesiano, YCartesiano, claseActual);
@@ -1455,7 +1025,6 @@ procedure TForm1.gridResultadosSelectCell(Sender: TObject; Col, Row: Integer;
   var CanSelect: Boolean);
 var
   resultado: NaiveBayes.TResultadoClasificacion;
-  i: Integer;
 begin
   CanSelect := True;
 
@@ -1490,14 +1059,13 @@ begin
       );
   end;
 
-  Graficas.DibujarGraficaProbabilidades(paintBoxClases, nbClases,
+  Graficas.MostrarGraficaProbabilidades(paintBoxClases, nbClases,
     resultado.Probabilidades);
 end;
 
 procedure TForm1.CargarGridDatos(const NombreArchivo: string);
 begin
-  CargarDatosDesdeCSV(NombreArchivo, matrizDatosOriginales, nombresColumnas,
-    totalFilasDatos, totalColumnasDatos, indiceColumnaClase, delimitadorArchivo);
+  Matrices.CargarDatosDesdeCSV(NombreArchivo, matrizDatosOriginales, nombresColumnas, totalFilasDatos, totalColumnasDatos, indiceColumnaClase, delimitadorArchivo);
 
   SetLength(matrizDatosPrueba, 0);
   SetLength(matrizDatosPruebaNormalizados, 0);
@@ -1515,16 +1083,18 @@ begin
 
   if (totalFilasDatos > 0) and (totalColumnasDatos > 0) then
   begin
-    { Inicializar el ComboBox en Min-Max y recalcular con el método actual }
+    { Inicializar el ComboBox en Min-Max y recalcular con el mÃ©todo actual }
     cmbMetodoNormalizacion.ItemIndex := 0;
     AplicarNormalizacionActual;
   end;
 
-  CargarGridDesdeMatriz(matrizDatosOriginales);
+  Matrices.CargarGridDesdeMatriz(gridDatos, matrizDatosOriginales, nombresColumnas, totalFilasDatos, totalColumnasDatos);
   tipoGraficaActual := tgNinguna;
   CargarComboBoxColumnas;
   EntrenarNaiveBayes;
 end;
+
+
 
 //Funcion para cargar el archvio
 procedure TForm1.btnCargarArchivosClick(Sender: TObject);
@@ -1544,7 +1114,7 @@ begin
     Exit;
   end;
 
-  CargarGridDesdeMatriz(matrizDatosOriginales);
+  Matrices.CargarGridDesdeMatriz(gridDatos, matrizDatosOriginales, nombresColumnas, totalFilasDatos, totalColumnasDatos);
 end;
 
 procedure TForm1.btnNormalizadosClick(Sender: TObject);
@@ -1566,7 +1136,7 @@ begin
     Exit;
   end;
 
-  case cmbTipoGrafica.ItemIndex of
+  case cBoxTipoGrafica.ItemIndex of
 
     // Barras
     1:
@@ -1576,7 +1146,7 @@ begin
       cBoxColumnaA.Enabled := False;
       cBoxColumnaB.Enabled := False;
 
-      PrepararGraficaClases;
+      paintBoxClasesPaint(nil);
     end;
 
     // Dispersion
@@ -1601,7 +1171,7 @@ begin
         Exit;
       end;
 
-      PrepararGraficaDispersion;
+      paintBoxClasesPaint(nil);
     end;
 
     // BoxPlot
@@ -1618,7 +1188,7 @@ begin
         Exit;
       end;
 
-      PrepararGraficaBoxPlot;
+      paintBoxClasesPaint(nil);
     end;
 
   else
@@ -1642,22 +1212,22 @@ begin
     Exit;
   end;
 
-  ExportarMatrizCSV(matrizDatosNormalizados);
+  ExportarMatrizNormalizada;
 end;
 
 procedure TForm1.btnMediaClick(Sender: TObject);
 begin
-  EjecutarEstadistica(teMedia);
+  EjecutarEstadisticaSeleccionada(teMedia);
 end;
 
 procedure TForm1.btnMedianaClick(Sender: TObject);
 begin
-  EjecutarEstadistica(teMediana);
+  EjecutarEstadisticaSeleccionada(teMediana);
 end;
 
 procedure TForm1.btnDesviacionClick(Sender: TObject);
 begin
-  EjecutarEstadistica(teDesviacion);
+  EjecutarEstadisticaSeleccionada(teDesviacion);
 end;
 
 procedure TForm1.ActualizarContadorPuntosSinteticos;
@@ -1667,15 +1237,13 @@ begin
 end;
 
 procedure TForm1.btnCrearClasesClick(Sender: TObject);
-var
-  i: Integer;
 begin
-  cmbClaseActual.Items.Clear;
+  cBoxClaseActual.Items.Clear;
   for i := 0 to spinNumClases.Value - 1 do
-    cmbClaseActual.Items.Add('Clase ' + IntToStr(i));
+    cBoxClaseActual.Items.Add('Clase ' + IntToStr(i));
 
-  if cmbClaseActual.Items.Count > 0 then
-    cmbClaseActual.ItemIndex := 0;
+  if cBoxClaseActual.Items.Count > 0 then
+    cBoxClaseActual.ItemIndex := 0;
 end;
 
 procedure TForm1.btnLimpiarCanvasClick(Sender: TObject);
@@ -1692,7 +1260,7 @@ begin
     Exit;
   end;
 
-  saveDialogExportar.Title := 'Guardar datos sintéticos';
+  saveDialogExportar.Title := 'Guardar datos sinteticos';
   saveDialogExportar.Filter := 'CSV (*.csv)|*.csv|Todos los archivos|*.*';
   saveDialogExportar.DefaultExt := 'csv';
 
@@ -1700,11 +1268,14 @@ begin
     Exit;
 
   ExportarDatosSinteticosCSV(saveDialogExportar.FileName, ',');
-  ShowMessage('Datos sintéticos exportados correctamente a: ' + ExtractFileName(saveDialogExportar.FileName));
+  ShowMessage('Datos sinteticos exportados correctamente a: ' + ExtractFileName(saveDialogExportar.FileName));
 end;
 
 
 
 end.
+
+
+
 
 

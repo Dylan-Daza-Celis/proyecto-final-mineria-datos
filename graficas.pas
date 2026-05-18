@@ -5,44 +5,40 @@ unit Graficas;
 interface
 
 uses
-  Classes, SysUtils, Graphics, ExtCtrls, Matrices;
+  Classes, SysUtils, Graphics, ExtCtrls, Matrices, Estadisticas;
 
 procedure LimpiarGrafica(const PaintBox: TPaintBox; const Mensaje: string);
-procedure ContarClases(const MatrizDatosOriginales: TMatrizString;
-  const TotalFilasDatos, IndiceColumnaClase: Integer;
-  out Etiquetas: TStringList; out Conteos: TArregloEntero);
-procedure PrepararGraficaClases(const MatrizDatosOriginales: TMatrizString;
-  const TotalFilasDatos, IndiceColumnaClase: Integer;
-  var EtiquetasClases: TStringList; out ConteosClases: TArregloEntero;
-  out MaxConteoClases: Integer);
-
-procedure DibujarGraficaBarras(const PaintBox: TPaintBox;
-  const Etiquetas: TStringList; const Valores: TArregloDouble;
-  const Titulo: string; MostrarPorcentaje: Boolean);
-
-procedure DibujarGraficaClases(const PaintBox: TPaintBox;
-  const Etiquetas: TStringList; const Conteos: TArregloEntero;
-  const MaxConteo: Integer);
-
-procedure DibujarGraficaProbabilidades(const PaintBox: TPaintBox;
+procedure MostrarGraficaClases(const PaintBox: TPaintBox;
+  const MatrizDatosOriginales: TMatrizString;
+  const TotalFilasDatos, IndiceColumnaClase: Integer);
+procedure MostrarGraficaDispersion(const PaintBox: TPaintBox;
+  const MatrizDatosOriginales: TMatrizString;
+  const NombresColumnas: TNombresColumnas;
+  const TotalFilasDatos, IndiceColumnaClase, ColX, ColY: Integer;
+  out MensajeError: string);
+procedure MostrarGraficaBoxPlot(const PaintBox: TPaintBox;
+  const MatrizDatosOriginales: TMatrizString;
+  const TotalFilasDatos, IndiceColumnaClase, Columna: Integer;
+  out MensajeError: string);
+procedure MostrarGraficaProbabilidades(const PaintBox: TPaintBox;
   const Clases: TStringList; const Probabilidades: TArregloDouble);
-
-procedure DibujarGraficaDispersion(const PaintBox: TPaintBox;
-  const ValoresX, ValoresY: TArregloDouble;
-  const MinX, MaxX, MinY, MaxY: Double;
-  const LabelX, LabelY: string);
-
-procedure DibujarGraficaDispersionClusters(const PaintBox: TPaintBox;
+procedure MostrarGraficaClusters(const PaintBox: TPaintBox;
   const ValoresX, ValoresY: TArregloDouble;
   const MinX, MaxX, MinY, MaxY: Double;
   const LabelX, LabelY: string;
   const ClusterPorRegistro: array of Integer);
 
-procedure DibujarGraficaBoxPlot(const PaintBox: TPaintBox;
-  const Labels: TStringList;
-  const ValoresMin, ValoresQ1, ValoresMediana, ValoresQ3, ValoresMax: TArregloDouble);
-
 implementation
+
+procedure ContarClases(const MatrizDatosOriginales: TMatrizString;
+  const TotalFilasDatos, IndiceColumnaClase: Integer;
+  out Etiquetas: TStringList; out Conteos: TArregloEntero);
+forward;
+procedure PrepararGraficaClases(const MatrizDatosOriginales: TMatrizString;
+  const TotalFilasDatos, IndiceColumnaClase: Integer;
+  var EtiquetasClases: TStringList; out ConteosClases: TArregloEntero;
+  out MaxConteoClases: Integer);
+forward;
 
 procedure LimpiarGrafica(const PaintBox: TPaintBox; const Mensaje: string);
 begin
@@ -743,6 +739,278 @@ begin
     Y := BaseY - Round((ValoresY[i] - MinY) * EscalaY);
     PaintBox.Canvas.Ellipse(X - 3, Y - 3, X + 3, Y + 3);
   end;
+end;
+
+function PrepararDatosDispersion(const MatrizDatosOriginales: TMatrizString;
+  const NombresColumnas: TNombresColumnas;
+  const TotalFilasDatos, IndiceColumnaClase, ColX, ColY: Integer;
+  out ValoresX, ValoresY: TArregloDouble;
+  out MinX, MaxX, MinY, MaxY: Double;
+  out LabelX, LabelY: string): Boolean;
+var
+  fila: Integer;
+  valorX: Double;
+  valorY: Double;
+  formatos: TFormatSettings;
+  puntos: Integer;
+begin
+  Result := False;
+  SetLength(ValoresX, 0);
+  SetLength(ValoresY, 0);
+  LabelX := '';
+  LabelY := '';
+
+  if (ColX < 0) or (ColY < 0) or (ColX = ColY) then
+    Exit;
+
+  if (ColX >= IndiceColumnaClase) or (ColY >= IndiceColumnaClase) then
+    Exit;
+
+  if ColX < Length(NombresColumnas) then
+    LabelX := NombresColumnas[ColX];
+  if ColY < Length(NombresColumnas) then
+    LabelY := NombresColumnas[ColY];
+
+  formatos := DefaultFormatSettings;
+  formatos.DecimalSeparator := '.';
+  puntos := 0;
+
+  for fila := 0 to TotalFilasDatos - 1 do
+  begin
+    if (fila >= Length(MatrizDatosOriginales)) or
+      (ColX >= Length(MatrizDatosOriginales[fila])) or
+      (ColY >= Length(MatrizDatosOriginales[fila])) then
+      Continue;
+
+    if not TryStrToFloat(Trim(MatrizDatosOriginales[fila][ColX]), valorX, formatos) then
+      Continue;
+
+    if not TryStrToFloat(Trim(MatrizDatosOriginales[fila][ColY]), valorY, formatos) then
+      Continue;
+
+    Inc(puntos);
+    SetLength(ValoresX, puntos);
+    SetLength(ValoresY, puntos);
+    ValoresX[puntos - 1] := valorX;
+    ValoresY[puntos - 1] := valorY;
+
+    if puntos = 1 then
+    begin
+      MinX := valorX;
+      MaxX := valorX;
+      MinY := valorY;
+      MaxY := valorY;
+    end
+    else
+    begin
+      if valorX < MinX then
+        MinX := valorX;
+      if valorX > MaxX then
+        MaxX := valorX;
+      if valorY < MinY then
+        MinY := valorY;
+      if valorY > MaxY then
+        MaxY := valorY;
+    end;
+  end;
+
+  Result := puntos > 0;
+end;
+
+function Percentil(const Datos: TArregloDouble; const P: Double): Double;
+var
+  idx: Double;
+  i: Integer;
+  frac: Double;
+begin
+  if Length(Datos) = 0 then
+    Exit(0);
+  if Length(Datos) = 1 then
+    Exit(Datos[0]);
+
+  idx := (Length(Datos) - 1) * P;
+  i := Trunc(idx);
+  frac := idx - i;
+  if i >= Length(Datos) - 1 then
+    Result := Datos[High(Datos)]
+  else
+    Result := Datos[i] + frac * (Datos[i + 1] - Datos[i]);
+end;
+
+function PrepararDatosBoxPlot(const MatrizDatosOriginales: TMatrizString;
+  const TotalFilasDatos, IndiceColumnaClase, Columna: Integer;
+  out Labels: TStringList;
+  out ValoresMin, ValoresQ1, ValoresMediana, ValoresQ3, ValoresMax: TArregloDouble): Boolean;
+var
+  fila: Integer;
+  numero: Double;
+  clase: string;
+  idxClase: Integer;
+  i: Integer;
+  valoresClase: array of TArregloDouble;
+  valores: TArregloDouble;
+  formatos: TFormatSettings;
+begin
+  Result := False;
+  Labels := TStringList.Create;
+  SetLength(ValoresMin, 0);
+  SetLength(ValoresQ1, 0);
+  SetLength(ValoresMediana, 0);
+  SetLength(ValoresQ3, 0);
+  SetLength(ValoresMax, 0);
+
+  if (Columna < 0) or (Columna >= IndiceColumnaClase) then
+    Exit;
+
+  formatos := DefaultFormatSettings;
+  formatos.DecimalSeparator := '.';
+  SetLength(valoresClase, 0);
+
+  for fila := 0 to TotalFilasDatos - 1 do
+  begin
+    if (fila >= Length(MatrizDatosOriginales)) or
+      (Columna >= Length(MatrizDatosOriginales[fila])) or
+      (IndiceColumnaClase >= Length(MatrizDatosOriginales[fila])) then
+      Continue;
+
+    if not TryStrToFloat(Trim(MatrizDatosOriginales[fila][Columna]), numero, formatos) then
+      Continue;
+
+    clase := Trim(MatrizDatosOriginales[fila][IndiceColumnaClase]);
+    if clase = '' then
+      clase := 'SinClase';
+
+    idxClase := Labels.IndexOf(clase);
+    if idxClase < 0 then
+    begin
+      idxClase := Labels.Add(clase);
+      SetLength(valoresClase, Labels.Count);
+      SetLength(valoresClase[idxClase], 0);
+    end;
+
+    SetLength(valoresClase[idxClase], Length(valoresClase[idxClase]) + 1);
+    valoresClase[idxClase][High(valoresClase[idxClase])] := numero;
+  end;
+
+  for i := 0 to Labels.Count - 1 do
+  begin
+    valores := valoresClase[i];
+    if Length(valores) = 0 then
+      Continue;
+
+    Estadisticas.OrdenarValores(valores);
+
+    SetLength(ValoresMin, Length(ValoresMin) + 1);
+    SetLength(ValoresQ1, Length(ValoresQ1) + 1);
+    SetLength(ValoresMediana, Length(ValoresMediana) + 1);
+    SetLength(ValoresQ3, Length(ValoresQ3) + 1);
+    SetLength(ValoresMax, Length(ValoresMax) + 1);
+
+    ValoresMin[High(ValoresMin)] := valores[0];
+    ValoresMax[High(ValoresMax)] := valores[High(valores)];
+    ValoresQ1[High(ValoresQ1)] := Percentil(valores, 0.25);
+    ValoresMediana[High(ValoresMediana)] := Percentil(valores, 0.50);
+    ValoresQ3[High(ValoresQ3)] := Percentil(valores, 0.75);
+  end;
+
+  Result := Labels.Count > 0;
+end;
+
+procedure MostrarGraficaClases(const PaintBox: TPaintBox;
+  const MatrizDatosOriginales: TMatrizString;
+  const TotalFilasDatos, IndiceColumnaClase: Integer);
+var
+  etiquetas: TStringList;
+  conteos: TArregloEntero;
+  maxConteo: Integer;
+begin
+  etiquetas := nil;
+  PrepararGraficaClases(MatrizDatosOriginales, TotalFilasDatos,
+    IndiceColumnaClase, etiquetas, conteos, maxConteo);
+  try
+    DibujarGraficaClases(PaintBox, etiquetas, conteos, maxConteo);
+  finally
+    if Assigned(etiquetas) then
+      etiquetas.Free;
+  end;
+end;
+
+procedure MostrarGraficaDispersion(const PaintBox: TPaintBox;
+  const MatrizDatosOriginales: TMatrizString;
+  const NombresColumnas: TNombresColumnas;
+  const TotalFilasDatos, IndiceColumnaClase, ColX, ColY: Integer;
+  out MensajeError: string);
+var
+  valoresX: TArregloDouble;
+  valoresY: TArregloDouble;
+  minX: Double;
+  maxX: Double;
+  minY: Double;
+  maxY: Double;
+  labelX: string;
+  labelY: string;
+begin
+  MensajeError := '';
+  if not PrepararDatosDispersion(MatrizDatosOriginales, NombresColumnas,
+    TotalFilasDatos, IndiceColumnaClase, ColX, ColY, valoresX, valoresY,
+    minX, maxX, minY, maxY, labelX, labelY) then
+  begin
+    MensajeError := 'No hay datos numericos para dispersion.';
+    LimpiarGrafica(PaintBox, 'No hay datos para graficar');
+    Exit;
+  end;
+
+  DibujarGraficaDispersion(PaintBox, valoresX, valoresY, minX, maxX, minY,
+    maxY, labelX, labelY);
+end;
+
+procedure MostrarGraficaBoxPlot(const PaintBox: TPaintBox;
+  const MatrizDatosOriginales: TMatrizString;
+  const TotalFilasDatos, IndiceColumnaClase, Columna: Integer;
+  out MensajeError: string);
+var
+  labels: TStringList;
+  valoresMin: TArregloDouble;
+  valoresQ1: TArregloDouble;
+  valoresMediana: TArregloDouble;
+  valoresQ3: TArregloDouble;
+  valoresMax: TArregloDouble;
+begin
+  MensajeError := '';
+  labels := nil;
+  if not PrepararDatosBoxPlot(MatrizDatosOriginales, TotalFilasDatos,
+    IndiceColumnaClase, Columna, labels, valoresMin, valoresQ1,
+    valoresMediana, valoresQ3, valoresMax) then
+  begin
+    MensajeError := 'No hay datos numericos para boxplot.';
+    LimpiarGrafica(PaintBox, 'No hay datos para graficar');
+    if Assigned(labels) then
+      labels.Free;
+    Exit;
+  end;
+
+  try
+    DibujarGraficaBoxPlot(PaintBox, labels, valoresMin, valoresQ1,
+      valoresMediana, valoresQ3, valoresMax);
+  finally
+    labels.Free;
+  end;
+end;
+
+procedure MostrarGraficaProbabilidades(const PaintBox: TPaintBox;
+  const Clases: TStringList; const Probabilidades: TArregloDouble);
+begin
+  DibujarGraficaProbabilidades(PaintBox, Clases, Probabilidades);
+end;
+
+procedure MostrarGraficaClusters(const PaintBox: TPaintBox;
+  const ValoresX, ValoresY: TArregloDouble;
+  const MinX, MaxX, MinY, MaxY: Double;
+  const LabelX, LabelY: string;
+  const ClusterPorRegistro: array of Integer);
+begin
+  DibujarGraficaDispersionClusters(PaintBox, ValoresX, ValoresY, MinX, MaxX,
+    MinY, MaxY, LabelX, LabelY, ClusterPorRegistro);
 end;
 
 end.

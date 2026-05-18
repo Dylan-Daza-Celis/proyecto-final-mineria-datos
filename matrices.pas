@@ -5,7 +5,7 @@ unit Matrices;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, Grids;
 
 type
   TTipoEstadistica = (teMedia, teMediana, teDesviacion);
@@ -28,6 +28,8 @@ procedure CargarDatosDesdeCSV(const NombreArchivo: string;
 procedure ExportarMatrizCSV(const Matriz: TMatrizString;
   const Nombres: TNombresColumnas; const TotalFilas, TotalColumnas: Integer;
   const Delimitador: Char; const NombreArchivo: string);
+procedure CargarGridDesdeMatriz(const Grid: TStringGrid; const Matriz: TMatrizString;
+  const Nombres: TNombresColumnas; const TotalFilas, TotalColumnas: Integer);
 
 implementation
 
@@ -222,6 +224,52 @@ begin
     lineas.SaveToFile(NombreArchivo);
   finally
     lineas.Free;
+  end;
+end;
+
+procedure CargarGridDesdeMatriz(const Grid: TStringGrid; const Matriz: TMatrizString;
+  const Nombres: TNombresColumnas; const TotalFilas, TotalColumnas: Integer);
+var
+  filaDatos: Integer;
+  filaGrid: Integer;
+  col: Integer;
+  filasMostrar: Integer;
+begin
+  if (Grid = nil) or (TotalColumnas <= 0) then
+    Exit;
+
+  filasMostrar := TotalFilas;
+  if Length(Matriz) < filasMostrar then
+    filasMostrar := Length(Matriz);
+
+  Grid.BeginUpdate;
+  try
+    Grid.FixedCols := 0;
+    Grid.FixedRows := 1;
+    Grid.RowCount := filasMostrar + 1;
+    Grid.ColCount := TotalColumnas;
+
+    for col := 0 to TotalColumnas - 1 do
+    begin
+      if col < Length(Nombres) then
+        Grid.Cells[col, 0] := Nombres[col]
+      else
+        Grid.Cells[col, 0] := 'Columna ' + IntToStr(col + 1);
+    end;
+
+    for filaDatos := 0 to filasMostrar - 1 do
+    begin
+      filaGrid := filaDatos + 1;
+      for col := 0 to TotalColumnas - 1 do
+      begin
+        if (filaDatos < Length(Matriz)) and (col < Length(Matriz[filaDatos])) then
+          Grid.Cells[col, filaGrid] := Matriz[filaDatos][col]
+        else
+          Grid.Cells[col, filaGrid] := '';
+      end;
+    end;
+  finally
+    Grid.EndUpdate;
   end;
 end;
 
