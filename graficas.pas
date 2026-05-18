@@ -30,10 +30,12 @@ procedure MostrarGraficaClusters(const PaintBox: TPaintBox;
 
 implementation
 
+//Contamos ocurrencias por clase para la grafica.
 procedure ContarClases(const MatrizDatosOriginales: TMatrizString;
   const TotalFilasDatos, IndiceColumnaClase: Integer;
   out Etiquetas: TStringList; out Conteos: TArregloEntero);
 forward;
+//Preparamos etiquetas, conteos y maximo para la grafica de clases.
 procedure PrepararGraficaClases(const MatrizDatosOriginales: TMatrizString;
   const TotalFilasDatos, IndiceColumnaClase: Integer;
   var EtiquetasClases: TStringList; out ConteosClases: TArregloEntero;
@@ -119,6 +121,7 @@ begin
   Result := Temp;
 end;
 
+//Dibujamos una grafica de barras con ejes y valores.
 procedure DibujarGraficaBarras(const PaintBox: TPaintBox;
   const Etiquetas: TStringList; const Valores: TArregloDouble;
   const Titulo: string; MostrarPorcentaje: Boolean);
@@ -311,6 +314,7 @@ begin
     'Probabilidades por Clase', True);
 end;
 
+//Dibujamos una dispersion escalando al area visible.
 procedure DibujarGraficaDispersion(const PaintBox: TPaintBox;
   const ValoresX, ValoresY: TArregloDouble;
   const MinX, MaxX, MinY, MaxY: Double;
@@ -440,6 +444,7 @@ begin
   end;
 end;
 
+//Dibujamos boxplots por clase usando percentiles.
 procedure DibujarGraficaBoxPlot(const PaintBox: TPaintBox;
   const Labels: TStringList;
   const ValoresMin, ValoresQ1, ValoresMediana, ValoresQ3, ValoresMax: TArregloDouble);
@@ -604,6 +609,7 @@ begin
   Result := COLORES_CLUSTER[ClusterActual mod 15];
 end;
 
+//Dibujamos dispersion coloreada por cluster.
 procedure DibujarGraficaDispersionClusters(const PaintBox: TPaintBox;
   const ValoresX, ValoresY: TArregloDouble;
   const MinX, MaxX, MinY, MaxY: Double;
@@ -741,6 +747,7 @@ begin
   end;
 end;
 
+//Preparamos datos X/Y y rangos para la dispersion.
 function PrepararDatosDispersion(const MatrizDatosOriginales: TMatrizString;
   const NombresColumnas: TNombresColumnas;
   const TotalFilasDatos, IndiceColumnaClase, ColX, ColY: Integer;
@@ -817,6 +824,7 @@ begin
   Result := puntos > 0;
 end;
 
+//Calculamos percentil con interpolacion lineal.
 function Percentil(const Datos: TArregloDouble; const P: Double): Double;
 var
   idx: Double;
@@ -837,6 +845,7 @@ begin
     Result := Datos[i] + frac * (Datos[i + 1] - Datos[i]);
 end;
 
+//Agrupamos valores por clase y calculamos min, Q1, mediana, Q3 y max.
 function PrepararDatosBoxPlot(const MatrizDatosOriginales: TMatrizString;
   const TotalFilasDatos, IndiceColumnaClase, Columna: Integer;
   out Labels: TStringList;

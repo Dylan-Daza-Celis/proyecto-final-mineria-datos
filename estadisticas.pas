@@ -26,6 +26,7 @@ procedure EjecutarEstadistica(const Grid: TStringGrid;
 
 implementation
 
+//Ordenamos con QuickSort para poder calcular mediana y percentiles.
 procedure OrdenarValores(var Valores: TArregloDouble);
   procedure QuickSort(var A: TArregloDouble; Izq, Der: Integer);
   var
@@ -62,6 +63,7 @@ begin
     QuickSort(Valores, 0, High(Valores));
 end;
 
+//Calculamos media y desviacion en modo muestral o poblacional.
 procedure CalcularMediaDesviacionBase(const Valores: TArregloDouble;
   out Media, Desviacion: Double; const UsarMuestral: Boolean);
 var
@@ -111,6 +113,7 @@ begin
   CalcularMediaDesviacionBase(Valores, Media, Desviacion, False);
 end;
 
+//Recorremos columnas numericas y acumulamos media, mediana y desviacion.
 procedure CalcularEstadisticasNumericas(const MatrizDatosOriginales: TMatrizString;
   const TotalColumnasDatos, TotalFilasDatos, IndiceColumnaClase: Integer;
   out Medias, Medianas, Desviaciones: TArregloDouble;
@@ -184,6 +187,7 @@ begin
   end;
 end;
 
+//Agregamos una fila de estadistica con formato y celdas vacias en columnas invalidas.
 procedure AgregarFilaEstadistica(const Grid: TStringGrid;
   const TotalColumnasDatos: Integer; const Valores: TArregloDouble;
   const ColumnasCalculadas: TArregloBool; const FilaDestino: Integer);
@@ -214,6 +218,7 @@ begin
   end;
 end;
 
+//Calculamos estadisticas y las colocamos debajo de los datos.
 procedure EjecutarEstadistica(const Grid: TStringGrid;
   const MatrizDatosOriginales: TMatrizString;
   const TotalColumnasDatos, TotalFilasDatos, IndiceColumnaClase: Integer;

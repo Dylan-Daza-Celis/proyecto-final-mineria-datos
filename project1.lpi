@@ -60,9 +60,6 @@
       <Unit>
         <Filename Value="naivebayes.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="Form2"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
         <UnitName Value="NaiveBayes"/>
       </Unit>
       <Unit>

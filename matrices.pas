@@ -33,6 +33,7 @@ procedure CargarGridDesdeMatriz(const Grid: TStringGrid; const Matriz: TMatrizSt
 
 implementation
 
+//Contamos comas y punto y coma para elegir el delimitador dominante.
 function DetectarDelimitador(const Linea: string): Char;
 var
   i: Integer;
@@ -55,6 +56,7 @@ begin
     Result := ',';
 end;
 
+//Cargamos datos desde CSV, limpiando filas vacias y usando la ultima columna como clase.
 procedure CargarDatosDesdeCSV(const NombreArchivo: string;
   out Matriz: TMatrizString; out Nombres: TNombresColumnas;
   out TotalFilas, TotalColumnas, IndiceClase: Integer; out Delimitador: Char);
@@ -172,6 +174,7 @@ begin
   end;
 end;
 
+//Exportamos cabecera y datos a CSV respetando el delimitador.
 procedure ExportarMatrizCSV(const Matriz: TMatrizString;
   const Nombres: TNombresColumnas; const TotalFilas, TotalColumnas: Integer;
   const Delimitador: Char; const NombreArchivo: string);
@@ -227,6 +230,7 @@ begin
   end;
 end;
 
+//Volcamos la matriz al grid con encabezados y limites seguros.
 procedure CargarGridDesdeMatriz(const Grid: TStringGrid; const Matriz: TMatrizString;
   const Nombres: TNombresColumnas; const TotalFilas, TotalColumnas: Integer);
 var

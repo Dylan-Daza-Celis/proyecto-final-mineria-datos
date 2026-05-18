@@ -64,33 +64,43 @@ type
 procedure InicializarModeloNaiveBayes(var Modelo: TNaiveBayesModel);
 procedure LiberarModeloNaiveBayes(var Modelo: TNaiveBayesModel);
 
+//Entrenamos Naive Bayes gaussiano y calculamos priors, medias y desviaciones por clase.
 procedure EntrenarNaiveBayes(const MatrizDatosOriginales: TMatrizString;
   const TotalFilasDatos, TotalColumnasDatos, IndiceColumnaClase: Integer;
   var Modelo: TNaiveBayesModel);
 
 function ProbabilidadGaussiana(const X, Media, Desv: Double): Double;
+//Calculamos log-probabilidades por clase y las normalizamos para evitar underflow.
 procedure ObtenerProbabilidadesPorClase(const Registro: TArregloDouble;
   const Modelo: TNaiveBayesModel; out Probabilidades: TArregloDouble);
+//Elegimos la clase con mayor probabilidad.
 function ClasificarRegistro(const Registro: TArregloDouble;
   const Modelo: TNaiveBayesModel; out Probabilidades: TArregloDouble): string;
 
+//Construimos la matriz de confusion con etiquetas unicas.
 procedure ConstruirMatrizConfusion(const ClasesReales,
   ClasesPredichas: TArregloString; out ClasesUnicas: TStringList;
   out MatrizConfusion: TArregloEntero2D);
 
+//Evaluamos registros validos, acumulamos resultados y guardamos probabilidades.
 procedure EvaluarConjuntoPruebaNaiveBayes(const MatrizDatosPrueba: TMatrizString;
   const TotalFilasPrueba, TotalColumnasPrueba, IndiceColumnaClasePrueba: Integer;
   const Modelo: TNaiveBayesModel; out Resultado: TNaiveBayesResultadoEvaluacion);
 
+//Mezclamos indices con Fisher-Yates para aleatorizar.
 procedure MezclarIndices(var Indices: array of Integer);
+//Validamos que cada clase tenga al menos K registros.
 procedure ValidarClasesParaKFold(const MatrizDatos: TMatrizString;
   const TotalFilas, IndiceColumnaClase, NumFolds: Integer; out MensajeError: string);
+//Distribuimos indices por clase en folds estratificados.
 procedure CrearFoldsEstratificados(const MatrizDatos: TMatrizString;
   const TotalFilas, IndiceColumnaClase: Integer; const NumFolds: Integer;
   out Folds: TFolds);
+//Extraemos una submatriz en el orden de indices.
 procedure ExtraerSubmatriz(const MatrizOrigen: TMatrizString;
   const Indices: array of Integer; out MatrizDestino: TMatrizString);
 procedure InitializeEvaluacion(out Resultado: TNaiveBayesResultadoEvaluacion);
+//Ejecutamos K-Fold estratificado y acumulamos la matriz global.
 procedure EjecutarKFold(const MatrizDatos: TMatrizString;
   const TotalFilas, TotalColumnas, IndiceColumnaClase: Integer;
   const NumFolds: Integer; out ResultadoKFold: TResultadoKFold);
@@ -867,6 +877,7 @@ begin
   SetLength(indicesEntrenamiento, 0);
 end;
 
+//Inicializamos la estructura de evaluacion con valores en cero.
 procedure InitializeEvaluacion(out Resultado: TNaiveBayesResultadoEvaluacion);
 begin
   Resultado.TotalRegistros := 0;

@@ -17,6 +17,7 @@ type
   TArregloPuntosSinteticos = array of TPuntoSintetico;
 
 function ObtenerColorClase(const Clase: Integer): TColor;
+//Convertimos coordenadas de pantalla a cartesianas invirtiendo el eje Y.
 procedure ConvertirCoordenadasPantallaACartesianas(const Image: TImage;
   const XPantalla, YPantalla: Integer; out XCartesiano, YCartesiano: Double);
 function ConvertirXPantalla(const Image: TImage; const XCartesiano: Double): Integer;
@@ -100,12 +101,14 @@ begin
   Image.Picture.Bitmap.Canvas.FillRect(0, 0, Image.Width, Image.Height);
 end;
 
+//Preparamos el canvas limpio con ejes cartesianos.
 procedure PrepararCanvasCartesiano(Image: TImage);
 begin
   LimpiarCanvasBlanco(Image);
   DibujarEjes(Image);
 end;
 
+//Dibujamos ejes y marcas de referencia en el plano.
 procedure DibujarEjes(Image: TImage);
 var
   Canvas: TCanvas;
@@ -160,6 +163,7 @@ begin
   Canvas.Brush.Style := bsSolid;
 end;
 
+//Inicializamos el canvas y reiniciamos los puntos sinteticos.
 procedure InicializarCanvas(Image: TImage);
 begin
   PrepararCanvasCartesiano(Image);
@@ -168,6 +172,7 @@ begin
     Image.Invalidate;
 end;
 
+//Agregamos un punto sintetico a la lista interna.
 procedure AgregarPuntoSintetico(const X, Y: Double; const Clase: Integer);
 var
   n: Integer;
@@ -209,6 +214,7 @@ begin
   Image.Invalidate;
 end;
 
+//Redibujamos todos los puntos despues de limpiar o redimensionar.
 procedure RedibujarPuntos(Image: TImage);
 var
   i: Integer;
@@ -248,6 +254,7 @@ begin
   Result := FloatToStrF(Valor, ffGeneral, 15, 6, FS);
 end;
 
+//Exportamos los puntos sinteticos en CSV con separador decimal consistente.
 procedure ExportarDatosSinteticosCSV(const NombreArchivo: string;
   const Delimitador: Char = ',');
 var

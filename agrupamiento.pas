@@ -25,6 +25,7 @@ type
     MensajeError: string;
   end;
 
+//Filtramos filas validas y columnas numericas con al menos 80% de valores numericos.
 procedure ExtraerDatosNumericosLimpios(
   Grid: TStringGrid;
   out DatosLimpios: TMatrizReal;
@@ -177,6 +178,7 @@ begin
   Result := Sqrt(Result);
 end;
 
+//Calculamos la distancia single-linkage como el minimo entre pares.
 function DistanciaClustersSingleLinkage(const Datos: TMatrizReal;
   const Cluster1, Cluster2: TCluster): Double;
 var
@@ -198,6 +200,7 @@ begin
   end;
 end;
 
+//Ejecutamos clustering aglomerativo y devolvemos el cluster por registro.
 function EjecutarAGNESLimpio(const Datos: TMatrizReal; K: Integer): TArregloInteger;
 var
   clusters: TArregloClusters;
@@ -271,6 +274,7 @@ begin
   end;
 end;
 
+//Validamos entrada, ejecutamos AGNES y reportamos errores si aplica.
 function EjecutarAGNES(Grid: TStringGrid; K: Integer): TResultadoAGNES;
 var
   datosLimpios: TMatrizReal;
